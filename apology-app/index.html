@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#fff0f5" />
+<title>小仪，别生气啦~</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height:100%; }
+  body {
+    font-family: "PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",sans-serif;
+    background: linear-gradient(160deg, #fff0f5 0%, #ffe4ec 45%, #ffd6e7 100%);
+    color: #7a4a5a;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ---------- 屏幕 ---------- */
+  .screen { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:64px 24px 24px; z-index:2; }
+  .screen.active { display:flex; animation: screenIn .45s ease both; }
+  @keyframes screenIn { from { opacity:0; transform:translateY(14px) scale(.98); } to { opacity:1; transform:none; } }
+
+  /* ---------- 漂浮爱心背景 ---------- */
+  .hearts-bg { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
+  .heart-f { position:absolute; bottom:-40px; opacity:0; animation: floatUp linear infinite; will-change: transform, opacity; }
+  @keyframes floatUp {
+    0%   { transform: translateY(0) rotate(0deg) scale(.8); opacity:0; }
+    12%  { opacity:.55; }
+    100% { transform: translateY(-108vh) rotate(28deg) scale(1.15); opacity:0; }
+  }
+
+  /* ---------- 按钮 ---------- */
+  .btn {
+    border:none; cursor:pointer; font-family:inherit; font-weight:700; color:#fff;
+    background: linear-gradient(135deg,#ff8fab,#e75480);
+    padding: 16px 38px; border-radius:999px; font-size:19px;
+    box-shadow: 0 6px 0 #c23a62, 0 10px 20px rgba(231,84,128,.35);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active { transform: translateY(5px); box-shadow: 0 1px 0 #c23a62, 0 4px 10px rgba(231,84,128,.3); }
+  .btn.soft  { background: linear-gradient(135deg,#ffc2d1,#ff8fab); box-shadow: 0 5px 0 #e2728f, 0 8px 16px rgba(231,84,128,.25); }
+  .btn.ghost { background:#fff; color:#e75480; box-shadow:0 4px 0 #f3c6d3, 0 8px 16px rgba(231,84,128,.18); }
+
+  /* ---------- 开场页 ---------- */
+  .title { font-size:30px; font-weight:800; color:#e75480; margin:18px 0 6px; text-shadow:0 2px 0 #fff; animation: titleBounce 1.6s ease-in-out infinite; }
+  @keyframes titleBounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+  .subtitle { font-size:15px; color:#c27a8f; margin-bottom:26px; }
+
+  /* CSS 眨眼小猫 */
+  .cat { position:relative; width:160px; height:140px; margin:0 auto 6px; }
+  .cat-ear { position:absolute; top:0; width:60px; height:60px; background:#ffb3c1; border-radius:55% 55% 15% 15%; z-index:1; }
+  .cat-ear.left  { left:8px;  transform:rotate(-18deg); }
+  .cat-ear.right { right:8px; transform:rotate(18deg); }
+  .cat-ear::after { content:""; position:absolute; inset:14px 10px 10px 10px; background:#ff8fa3; border-radius:50%; }
+  .cat-face { position:absolute; top:18px; left:50%; transform:translateX(-50%); width:130px; height:112px; background:#ffb3c1; border-radius:50%; z-index:2; }
+  .cat-eye { position:absolute; top:40px; width:20px; height:26px; background:#4a2c2a; border-radius:50%; animation: blink 3.6s infinite; }
+  .cat-eye.left  { left:30px; }
+  .cat-eye.right { right:30px; }
+  .cat-eye::after { content:""; position:absolute; top:4px; left:4px; width:7px; height:7px; background:#fff; border-radius:50%; }
+  @keyframes blink { 0%,90%,100% { transform:scaleY(1); } 93%,96% { transform:scaleY(.08); } }
+  .cat-mouth { position:absolute; bottom:32px; left:50%; transform:translateX(-50%); width:26px; height:12px; border-bottom:3px solid #4a2c2a; border-radius:0 0 100% 100%; }
+  .cat-blush { position:absolute; bottom:36px; width:18px; height:10px; background:#ff8fa3; border-radius:50%; opacity:.75; }
+  .cat-blush.left  { left:12px; }
+  .cat-blush.right { right:12px; }
+
+  /* ---------- 道歉书 ---------- */
+  .letter-card {
+    background:#fff; border-radius:22px; padding:22px 20px; max-width:420px; width:100%;
+    box-shadow:0 10px 30px rgba(231,84,128,.18); border:3px solid #ffd6e7;
+  }
+  .letter-card h2 { color:#e75480; font-size:22px; margin-bottom:12px; }
+  .letter-body {
+    min-height:200px; max-height:46vh; overflow-y:auto;
+    text-align:left; font-size:15px; line-height:1.9; color:#8a5a68;
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .cursor { display:inline-block; width:2px; height:16px; background:#e75480; vertical-align:-2px; margin-left:2px; animation: blinkC .8s steps(1) infinite; }
+  @keyframes blinkC { 50% { opacity:0; } }
+  .letter-sign { text-align:right; color:#e75480; font-weight:700; margin-top:8px; }
+  .letter-btns { margin-top:18px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  /* ---------- 哄人宝典 ---------- */
+  .cat-roll { font-size:60px; display:inline-block; animation: roll 1.8s ease-in-out infinite; }
+  @keyframes roll {
+    0%   { transform:rotate(0deg)  translateY(0); }
+    25%  { transform:rotate(14deg) translateY(-6px); }
+    50%  { transform:rotate(-12deg) translateY(-2px); }
+    75%  { transform:rotate(10deg) translateY(-8px); }
+    100% { transform:rotate(0)    translateY(0); }
+  }
+  .book-tag { font-size:14px; color:#c27a8f; background:#fff; padding:4px 14px; border-radius:999px; border:2px solid #ffc2d1; margin-bottom:10px; }
+  .sweet-card {
+    background:#fff; border-radius:20px; padding:22px 18px; max-width:420px; width:100%; min-height:130px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:17px; font-weight:700; color:#d3547a;
+    line-height:1.8; box-shadow:0 8px 24px rgba(231,84,128,.16); border:3px solid #ffe0ea;
+  }
+  .sweet-card .emoji-big { font-size:34px; margin-bottom:6px; }
+  .sweet-list { margin-top:12px; width:100%; max-height:170px; overflow-y:auto; text-align:left; border-top:2px dashed #ffd6e7; padding-top:8px; -webkit-overflow-scrolling:touch; }
+  .sweet-item { display:flex; gap:8px; align-items:flex-start; font-size:13.5px; font-weight:600; color:#a06678; line-height:1.6; padding:4px 2px; animation:itemIn .35s ease both; }
+  .sweet-item .n { color:#ff8fab; font-weight:800; flex:none; }
+  @keyframes itemIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:none; } }
+  .book-btns { margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  .book-btns + .book-btns { margin-top:10px; }
+
+  /* ---------- 回忆杀 · 时光胶囊 ---------- */
+  .capsule { font-size:60px; animation: capsuleWiggle 1.6s ease-in-out infinite; margin-bottom:4px; }
+  @keyframes capsuleWiggle { 0%,100% { transform:rotate(-6deg) translateY(0); } 50% { transform:rotate(6deg) translateY(-6px); } }
+  .memory-card {
+    background:linear-gradient(160deg,#fff8f0,#fff0e6); border-radius:22px; padding:26px 20px;
+    max-width:420px; width:100%; min-height:190px; border:3px solid #ffd9a8;
+    box-shadow:0 10px 30px rgba(231,150,84,.18); position:relative; overflow:hidden;
+  }
+  .memory-card::before { content:""; position:absolute; top:-40px; right:-40px; width:110px; height:110px; background:radial-gradient(circle,rgba(255,200,120,.35),transparent 70%); }
+  .memory-emoji { font-size:40px; margin-bottom:8px; animation: popIn .4s ease both; }
+  .memory-date { display:inline-block; font-size:13px; font-weight:800; color:#c07a3a; background:#ffe8cc; padding:4px 14px; border-radius:999px; margin-bottom:12px; }
+  .memory-text { font-size:16.5px; font-weight:700; color:#8a5a3a; line-height:1.9; }
+  .memory-dots { margin-top:14px; display:flex; gap:8px; justify-content:center; }
+  .memory-dots span { width:9px; height:9px; border-radius:50%; background:#ffd9a8; transition:background .3s, transform .3s; }
+  .memory-dots span.on { background:#ff9e4f; transform:scale(1.35); }
+
+  /* ---------- 泡泡小游戏 ---------- */
+  .game-overlay { position:fixed; inset:0; background:rgba(255,224,234,.95); z-index:20; display:none; flex-direction:column; align-items:center; padding:18px; }
+  .game-overlay.active { display:flex; }
+  .game-exit { position:absolute; top:12px; right:12px; background:#fff; color:#e75480; border:none; border-radius:999px; padding:8px 16px; font-weight:700; font-size:13px; box-shadow:0 4px 10px rgba(231,84,128,.2); }
+  .game-hud { width:100%; max-width:420px; display:flex; justify-content:space-between; align-items:center; font-weight:800; color:#e75480; font-size:15px; margin-bottom:10px; }
+  .game-area {
+    position:relative; flex:1; width:100%; max-width:420px; min-height:260px;
+    border-radius:20px; background:linear-gradient(180deg,#ffe3ec,#ffd6e7);
+    border:3px solid #ffc2d1; overflow:hidden; touch-action:manipulation;
+  }
+  .bubble {
+    position:absolute; width:74px; height:74px; border-radius:50%;
+    background:radial-gradient(circle at 32% 28%, #fff, #ff9eb5 70%);
+    display:flex; align-items:center; justify-content:center; font-size:34px; cursor:pointer;
+    box-shadow:0 6px 14px rgba(231,84,128,.35), inset 0 -6px 10px rgba(200,60,100,.15);
+    animation: bob 2.4s ease-in-out infinite; transition:transform .08s;
+    will-change: transform;
+  }
+  .bubble:active { transform:scale(.86); }
+  @keyframes bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+  .bubble.pop { animation: popAnim .32s ease forwards; pointer-events:none; }
+  @keyframes popAnim { 0% { transform:scale(1); opacity:1; } 60% { transform:scale(1.35); opacity:.9; } 100% { transform:scale(0); opacity:0; } }
+  .game-msg { font-size:15px; color:#c27a8f; font-weight:700; margin-top:10px; min-height:22px; }
+
+  /* ---------- 和好动画 ---------- */
+  #fx { position:fixed; inset:0; z-index:10; pointer-events:none; }
+  .recon-text { position:relative; z-index:11; font-size:38px; font-weight:900; color:#e75480; text-shadow:0 2px 0 #fff, 0 0 24px rgba(255,150,180,.8); animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes popIn { from { transform:scale(0); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .recon-sub { position:relative; z-index:11; margin-top:14px; font-size:17px; color:#c27a8f; animation: fadeIn 1s .4s ease both; }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+  /* ---------- 结尾 ---------- */
+  .end-heart { font-size:72px; animation: beat 1.1s ease-in-out infinite; }
+  @keyframes beat { 0%,100% { transform:scale(1); } 25% { transform:scale(1.14); } 40% { transform:scale(1); } 60% { transform:scale(1.1); } }
+  .end-sig { font-size:22px; font-weight:800; color:#e75480; margin-top:20px; }
+  .end-sub { font-size:14px; color:#c27a8f; margin-top:10px; }
+  .hug-box { margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .hug-btn { font-size:17px; padding:14px 34px; }
+  .hug-btn:active { transform:scale(.92); }
+  .hug-count { font-size:14px; color:#c27a8f; font-weight:700; background:#fff; padding:6px 16px; border-radius:999px; border:2px solid #ffc2d1; min-width:130px; }
+  .hug-count b { color:#e75480; font-size:17px; }
+
+  /* ---------- 消气进度条 ---------- */
+  .calm-bar { position:fixed; top:0; left:0; right:0; z-index:25; padding:10px 14px 0; pointer-events:none; }
+  .calm-bar-inner { max-width:420px; margin:0 auto; background:rgba(255,255,255,.88); border:2px solid #ffc2d1; border-radius:999px; padding:6px 12px 6px 8px; display:flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(231,84,128,.2); }
+  .calm-heart { font-size:17px; flex:none; animation: beat 1.1s ease-in-out infinite; }
+  .calm-track { flex:1; height:14px; background:#ffe4ec; border-radius:999px; overflow:hidden; }
+  .calm-fill { height:100%; width:100%; transform:scaleX(0); transform-origin:left; border-radius:999px; background:linear-gradient(90deg,#ff8fab,#e75480); transition:transform .5s cubic-bezier(.34,1.56,.64,1); position:relative; will-change: transform; }
+  .calm-fill::after { content:""; position:absolute; inset:2px 6px; background:linear-gradient(180deg,rgba(255,255,255,.65),rgba(255,255,255,0)); border-radius:999px; }
+  .calm-num { font-size:13px; font-weight:800; color:#e75480; flex:none; min-width:42px; text-align:right; }
+  .calm-bar.full .calm-heart { animation:heartFull .5s ease-in-out infinite alternate; }
+  .calm-bar.full .calm-fill { background:linear-gradient(90deg,#ff9eb5,#ff2e63); box-shadow:0 0 14px rgba(255,46,99,.75); }
+  @keyframes heartFull { from { transform:scale(1); } to { transform:scale(1.28); } }
+
+  /* ---------- Toast ---------- */
+  .toast { position:fixed; left:50%; top:20%; transform:translateX(-50%); background:#fff; color:#e75480; font-weight:800; padding:12px 22px; border-radius:999px; box-shadow:0 8px 20px rgba(231,84,128,.25); z-index:30; opacity:0; pointer-events:none; transition:opacity .25s; font-size:16px; white-space:nowrap; }
+  .toast.show { opacity:1; }
+
+  /* ---------- 隐藏彩蛋 ---------- */
+  .easter { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:linear-gradient(160deg,rgba(255,214,150,.96),rgba(255,236,200,.97)); padding:24px; }
+  .easter.active { display:flex; animation: screenIn .5s ease both; }
+  .easter-inner { background:#fff; border-radius:26px; padding:34px 26px; max-width:420px; width:100%; text-align:center; border:4px solid #ffd700; box-shadow:0 0 40px rgba(255,200,60,.55); position:relative; }
+  .easter-emoji { font-size:56px; animation: beat 1s ease-in-out infinite; }
+  .easter-title { font-size:26px; font-weight:900; color:#e07b00; margin:10px 0 8px; }
+  .easter-text { font-size:16px; color:#8a6a3a; line-height:1.9; font-weight:700; margin-bottom:20px; }
+  .easter-spark { position:absolute; font-size:20px; animation: sparkFloat 2.4s ease-in-out infinite; pointer-events:none; }
+  @keyframes sparkFloat { 0%,100% { transform:translateY(0) rotate(0deg) scale(.9); opacity:.25; } 50% { transform:translateY(-14px) rotate(20deg) scale(1.15); opacity:1; } }
+
+  /* ---------- 消息提醒条（30 分钟未和好） ---------- */
+  .reminder {
+    position:fixed; top:60px; left:50%; transform:translate(-50%,-160%);
+    z-index:26; display:flex; align-items:center; gap:8px;
+    background:linear-gradient(135deg,#fff6f0,#ffe9f0); color:#d3547a;
+    font-weight:800; font-size:15px; padding:10px 22px; border-radius:999px;
+    border:2px solid #ffb3c1; box-shadow:0 6px 18px rgba(231,84,128,.32);
+    max-width:92vw; white-space:nowrap; pointer-events:none;
+    opacity:0; transition:transform .55s cubic-bezier(.34,1.56,.64,1), opacity .4s;
+    will-change: transform, opacity;
+  }
+  .reminder.show { transform:translate(-50%,0); opacity:1; }
+  .reminder-emoji { animation: beat 1.1s ease-in-out infinite; }
+
+  /* ---------- v5：生气程度选择 ---------- */
+  .anger-card { display:flex; flex-direction:column; gap:14px; width:100%; max-width:400px; margin-top:8px; }
+  .anger-btn { width:100%; padding:18px 20px; font-size:20px; line-height:1.5; display:flex; flex-direction:column; gap:4px; }
+  .anger-btn span { font-size:13px; font-weight:600; opacity:.92; }
+  .anger-btn.mild   { background:linear-gradient(135deg,#9be8c8,#4fd0a0); box-shadow:0 5px 0 #2f9d74, 0 8px 16px rgba(79,208,160,.3); }
+  .anger-btn.medium { background:linear-gradient(135deg,#ffd98f,#ffb347); box-shadow:0 5px 0 #e08e2e, 0 8px 16px rgba(255,179,71,.3); }
+  .anger-btn.severe { background:linear-gradient(135deg,#ff9e8f,#ff5e57); box-shadow:0 5px 0 #d63c33, 0 8px 16px rgba(255,94,87,.32); }
+
+  /* ---------- v5：道歉信编辑器 ---------- */
+  .letter-edit { font-size:13px; padding:9px 18px; }
+  .editor { position:fixed; inset:0; z-index:45; display:none; align-items:center; justify-content:center; background:rgba(122,74,90,.45); padding:20px; }
+  .editor.active { display:flex; }
+  .editor-inner { background:#fff; border-radius:22px; padding:22px 18px; max-width:440px; width:100%; border:3px solid #ffd6e7; box-shadow:0 12px 36px rgba(122,74,90,.35); text-align:center; }
+  .editor-title { font-size:20px; font-weight:900; color:#e75480; margin-bottom:12px; }
+  .editor textarea, .editor input { width:100%; border:2px solid #ffd6e7; border-radius:12px; padding:10px 12px; font-family:inherit; font-size:15px; color:#8a5a68; outline:none; user-select:text; -webkit-user-select:text; background:#fff8fb; }
+  .editor textarea { min-height:170px; resize:vertical; line-height:1.8; margin-bottom:10px; }
+  .editor input { margin-bottom:14px; }
+  .editor textarea:focus, .editor input:focus { border-color:#ff8fab; }
+  .editor-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .editor-btns .btn { font-size:14px; padding:11px 18px; }
+
+  /* ---------- v6：语音哄话 & 每日限定彩蛋 ---------- */
+  .daily-hint { font-size:13px; color:#e08e2e; font-weight:800; background:#fff6e3; border:2px dashed #ffcf7d; border-radius:999px; padding:6px 16px; margin-top:12px; }
+  .sweet-item.daily { background:linear-gradient(135deg,#fff6e3,#ffe9c9); border:2px solid #ffd700; border-radius:12px; padding:8px 10px; color:#c07a00; animation: dailyPop .5s cubic-bezier(.34,1.56,.64,1) both; box-shadow:0 4px 12px rgba(255,200,60,.4); }
+  .sweet-item.daily .n { color:#e07b00; }
+  @keyframes dailyPop { 0% { transform:scale(.6) rotate(-6deg); opacity:0; } 70% { transform:scale(1.06) rotate(2deg); } 100% { transform:scale(1); opacity:1; } }
+  .game-required-hint { font-size:14px; font-weight:800; color:#d63c33; background:#ffe9e4; border:2px dashed #ff9e8f; border-radius:999px; padding:8px 18px; margin-top:12px; }
+  .btn:disabled { opacity:.55; cursor:not-allowed; box-shadow:0 4px 0 #c9a0ac, 0 6px 12px rgba(231,84,128,.15); }
+
+  /* ---------- 性能：尊重系统“减弱动态效果” ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .screen.active { animation-duration:.01s; }
+    .heart-f, .cat-roll, .capsule, .calm-heart, .end-heart, .easter-spark,
+    .recon-text, .memory-emoji, .reminder-emoji, .title { animation:none !important; }
+    .bubble { animation:none !important; transition:none !important; }
+    .sweet-item, .sweet-item.daily { animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hearts-bg" id="heartsBg"></div>
+
+<!-- 消气进度条（全局可见，满 100 自动和好） -->
+<div class="calm-bar" id="calmBar">
+  <div class="calm-bar-inner">
+    <span class="calm-heart">💗</span>
+    <div class="calm-track"><div class="calm-fill" id="calmFill"></div></div>
+    <span class="calm-num" id="calmNum">0%</span>
+  </div>
+</div>
+
+<!-- 消息提醒条：打开超过 N 分钟未和好时出现 -->
+<div class="reminder" id="reminder" role="status">
+  <span class="reminder-emoji" id="reminderEmoji">🥺</span>
+  <span class="reminder-text" id="reminderText">他还在等你原谅…</span>
+</div>
+
+<!-- ① 开场页 -->
+<section class="screen active" id="screen-opening">
+  <div class="cat">
+    <div class="cat-ear left"></div>
+    <div class="cat-ear right"></div>
+    <div class="cat-face">
+      <div class="cat-eye left"></div>
+      <div class="cat-eye right"></div>
+      <div class="cat-blush left"></div>
+      <div class="cat-blush right"></div>
+      <div class="cat-mouth"></div>
+    </div>
+  </div>
+  <div class="title" id="openingTitle">小仪，别生气啦~</div>
+  <div class="subtitle">有一封道歉信，等你查收 💌</div>
+  <button class="btn" id="btnOpen">点我哄你</button>
+</section>
+
+<!-- ② 生气程度选择 -->
+<section class="screen" id="screen-anger">
+  <div class="book-tag">💢 先告诉小硕，你有多生气？</div>
+  <div class="anger-card">
+    <button class="btn anger-btn mild" id="btnAngerMild">😊 轻度<span>哄两句就好啦，直接上甜话</span></button>
+    <button class="btn anger-btn medium" id="btnAngerMedium">😤 中度<span>回忆杀 + 甜话，认真哄</span></button>
+    <button class="btn anger-btn severe" id="btnAngerSevere">😡 重度<span>回忆杀 + 戳破全部泡泡才能和好</span></button>
+  </div>
+</section>
+
+<!-- ③ 道歉书 -->
+<section class="screen" id="screen-letter">
+  <div class="letter-card">
+    <h2 id="letterTitle">💌 致 小仪</h2>
+    <div class="letter-body" id="letterBody"></div>
+    <div class="letter-sign" id="letterSign"></div>
+  </div>
+  <div class="letter-btns">
+    <button class="btn soft" id="btnForgive">原谅你啦</button>
+    <button class="btn ghost" id="btnAngry">还生气</button>
+    <button class="btn ghost letter-edit" id="btnEditLetter">✏️ 编辑道歉信</button>
+  </div>
+</section>
+
+<!-- ④ 回忆杀 · 时光胶囊 -->
+<section class="screen" id="screen-memories">
+  <div class="capsule">📦✨</div>
+  <div class="book-tag">⏳ 时光胶囊 · 我们的甜蜜回忆</div>
+  <div class="memory-card" id="memoryCard">
+    <div class="memory-emoji" id="memoryEmoji">🌻</div>
+    <div class="memory-date" id="memoryDate"></div>
+    <div class="memory-text" id="memoryText"></div>
+    <div class="memory-dots" id="memoryDots"></div>
+  </div>
+  <div class="book-btns">
+    <button class="btn soft" id="btnMemNext">💌 打开下一颗回忆</button>
+  </div>
+  <div class="book-btns">
+    <button class="btn" id="btnMemDone" style="display:none;">回忆完啦，继续哄我！</button>
+  </div>
+</section>
+
+<!-- ⑤ 哄人宝典 -->
+<section class="screen" id="screen-book">
+  <div class="cat-roll">🐱</div>
+  <div class="book-tag">📖 哄人宝典 · 第 1 页</div>
+  <div class="sweet-card" id="sweetCard">
+    <div style="width:100%;">
+      <div class="emoji-big">💗</div>
+      <div id="sweetText"></div>
+    </div>
+    <div class="sweet-list" id="sweetList"></div>
+  </div>
+  <div class="book-btns">
+    <button class="btn ghost" id="btnNextLine">再哄一句</button>
+    <button class="btn soft" id="btnPlayGame">🎈 戳破生气泡泡</button>
+    <button class="btn ghost" id="btnVoice">🔊 语音哄话：开</button>
+  </div>
+  <div class="daily-hint" id="dailyHint"></div>
+  <div class="game-required-hint" id="gameReqHint" style="display:none;">😡 重度生气：必须戳破全部泡泡才能和好哦！</div>
+  <div class="book-btns">
+    <button class="btn" id="btnForgive2">好啦，原谅你啦</button>
+  </div>
+</section>
+
+<!-- ⑥ 泡泡小游戏 -->
+<div class="game-overlay" id="gameOverlay">
+  <button class="game-exit" id="btnExitGame">不玩啦，原谅你</button>
+  <div class="game-hud">
+    <span id="gameLevelLabel">第 1 关</span>
+    <span id="gameScoreLabel">💥 0 / 5</span>
+  </div>
+  <div class="game-area" id="gameArea"></div>
+  <div class="game-msg" id="gameMsg">戳破生气泡泡，把坏心情赶走！</div>
+</div>
+
+<!-- ⑦ 和好动画 -->
+<section class="screen" id="screen-reconcile">
+  <canvas id="fx"></canvas>
+  <div class="recon-text">和好啦，拉钩！🤙</div>
+  <div class="recon-sub">( •̀ ω •́ )✧ 我家小仪最好哄啦</div>
+</section>
+
+<!-- ⑧ 结尾 -->
+<section class="screen" id="screen-ending">
+  <div class="end-heart">❤️</div>
+  <div class="end-sig" id="endSig">永远爱你的小仪的小硕</div>
+  <div class="end-sub">—— 要一直一直在一起哦 ——</div>
+  <div style="margin-top:28px;"><button class="btn soft" id="btnReplay">再看一遍 💞</button></div>
+  <div class="hug-box">
+    <button class="btn soft hug-btn" id="btnHug">🫂 要抱抱</button>
+    <div class="hug-count" id="hugCount">已抱抱 <b>0</b> 次</div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<!-- 隐藏彩蛋 -->
+<div class="easter" id="easterOverlay">
+  <div class="easter-inner">
+    <div class="easter-emoji">🌟👑🌟</div>
+    <div class="easter-title">🎉 隐藏彩蛋解锁！</div>
+    <div class="easter-text">99 个抱抱达成！<br>小仪，你是全世界最幸福的小公主，<br>小硕要把你宠上天！💝</div>
+    <button class="btn" id="btnEasterClose">把这份爱收好 💝</button>
+  </div>
+<!-- v5：道歉信编辑器弹层 -->
+<div class="editor" id="letterEditor">
+  <div class="editor-inner">
+    <div class="editor-title">✏️ 编辑道歉信</div>
+    <textarea id="editorText" rows="6" placeholder="每行一句，保存后自动生效"></textarea>
+    <input id="editorSign" maxlength="30" placeholder="署名，如：永远爱你的小硕">
+    <div class="editor-btns">
+      <button class="btn soft" id="btnEditorSave">💾 保存</button>
+      <button class="btn ghost" id="btnEditorReset">↩️ 恢复默认</button>
+      <button class="btn ghost" id="btnEditorClose">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================== CONFIG 可编辑区 ======================== */
+const CONFIG = {
+  girl: "小仪",            // 她的名字
+  boy: "小硕",             // 你的名字
+  openingTitle: "小仪，别生气啦~",      // 开场标题
+  letterTitle: "💌 致 小仪",           // 道歉信标题
+  letter: [                            // 道歉信正文（每行一条，自动打字）
+    "亲爱的小仪：",
+    "对不起，我知道我惹你生气了。",
+    "我不该惹你难过，都是我的错。",
+    "你生气的样子虽然很可爱，",
+    "但我更想看到你笑的样子。",
+    "我保证下次一定改，说到做到！",
+    "别生气了好不好？我带你去吃好吃的～",
+    "你永远是我心里最最最重要的人。",
+    "原谅我这个大笨蛋一次，好不好？"
+  ],
+  letterSign: "永远爱你的小硕",        // 道歉信署名
+  memories: [                          // 时光胶囊 · 甜蜜回忆卡片（可随意增删改）
+    { date: "第一次见面", emoji: "🌻", text: "那天阳光正好，你穿着我最喜欢的裙子冲我笑，我的世界一下子就亮了。" },
+    { date: "第一次牵手", emoji: "🫶", text: "过马路时我偷偷牵住你的手，你的手心热热的，我的心跳快得要飞出来。" },
+    { date: "第一次看电影", emoji: "🎬", text: "你靠在我肩上睡着了，电影演了什么我全忘了，只记得你睫毛颤动的样子好乖。" }
+  ],
+  sweetLines: [                        // 甜话 / 土味情话（可随意增删）
+    "你知道我的心在哪吗？在你那里呀。",
+    "你猜我喜欢什么？喜欢……喜欢你。",
+    "今天有点想你，其实不止一点，也不止今天。",
+    "你是不是属糖的？不然怎么这么甜。",
+    "我迷路了，因为你的眼睛里藏着星辰大海。",
+    "最近有点“贫血”，因为想你想到血槽已空。",
+    "你笑起来的样子，比奶茶还甜三分。",
+    "别人问我喜欢什么，我又要开始说你了。",
+    "你就像WiFi，没有你我就连不上快乐。",
+    "听见我的心跳声了吗？它一直在喊你的名字。",
+    "就算世界末日，我也要拉着你的手不放。",
+    "你是我打喷嚏都会想念的人。",
+    "左手是你，右手是你，心里还是你。",
+    "遇见你之后，我的世界全是粉色泡泡。",
+    "你是我的充电宝，看见你我就满格电。",
+    "想摘月亮送给你？算了，它没你亮。",
+    "我的开心密码，就是你的名字。",
+    "你是不是又变重了？因为你在我的心里越来越重。"
+  ],
+  gameLevels: [                        // 泡泡小游戏关卡（可调数量）
+    { name: "第 1 关", need: 5 },
+    { name: "第 2 关", need: 8 },
+    { name: "第 3 关", need: 12 }
+  ],
+  progress: {                          // 消气进度规则（满 100 自动触发和好动画）
+    letter: 20,                        // 看完道歉信 +20
+    memory: 10,                        // 每看一张回忆卡片 +10
+    enterBook: 10,                     // 进入哄人宝典 +10
+    sweetLine: 10,                     // 每看一句甜话 +10
+    bubble: 4                          // 每戳破一个生气泡泡 +4
+  },
+  hugTarget: 99,                       // 抱抱计数彩蛋阈值（点满触发隐藏彩蛋）
+  reminderMinutes: 30,                 // 消息提醒：打开超过 N 分钟未和好 → 顶部提醒条
+  reminderText: "他还在等你原谅",      // 提醒条文案（可编辑）
+  reminderEmoji: "🥺",                 // 提醒条表情（可编辑）
+  dailyRevealAt: 3,                    // v6：每日限定彩蛋——每天第 N 句甜话时解锁隐藏甜话
+  dailyLines: {                        // v6：按日期隐藏的甜话（key 为本地日期 YYYY-MM-DD，可增删）
+    "2026-08-08": "今天也要做全世界最喜欢小仪的小硕——生气归生气，爱你这件事一天都没停过。",
+    "2026-08-09": "听说今天的烦恼，用一颗糖和一句『我爱你』就能融化，糖我来买，话我现在就说。",
+    "2026-08-10": "小仪，你皱眉头的样子我只许自己看见，因为那是只属于我的可爱。"
+  },
+  endSignature: "永远爱你的小仪的小硕" // 结尾签名
+};
+/* ================================================================ */
+
+const $ = (id) => document.getElementById(id);
+
+/* ==================== v5：道歉信自定义编辑（localStorage） ==================== */
+const LS_LINES = 'apology.letter.lines.v5';
+const LS_SIGN  = 'apology.letter.sign.v5';
+function loadLetterLines() {
+  try {
+    const raw = localStorage.getItem(LS_LINES);
+    if (raw) { const arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length) return arr; }
+  } catch (e) {}
+  return CONFIG.letter.slice();
+}
+function loadLetterSign() {
+  try { const v = localStorage.getItem(LS_SIGN); if (v) return v; } catch (e) {}
+  return CONFIG.letterSign;
+}
+let letterLines = loadLetterLines();
+let letterSign  = loadLetterSign();
+
+/* ==================== v6：每日限定彩蛋（按本地日期） ==================== */
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+         String(d.getMonth() + 1).padStart(2, '0') + '-' +
+         String(d.getDate()).padStart(2, '0');
+}
+const DAILY_KEY = todayKey();
+const todayDaily = CONFIG.dailyLines[DAILY_KEY] || null;
+let dailyShownToday = (function () {
+  try { return localStorage.getItem('apology.dailyShown.date') === DAILY_KEY; } catch (e) { return false; }
+})();
+
+/* ==================== v6：语音哄话（浏览器 TTS；无语音则 Web Audio 兜底旋律） ==================== */
+let voiceOn = (function () {
+  try { return localStorage.getItem('apology.voice.on') !== '0'; } catch (e) { return true; }
+})();
+function setVoiceLabel() {
+  $('btnVoice').textContent = voiceOn ? '🔊 语音哄话：开' : '🔇 语音哄话：关';
+}
+function speakSweet(text) {
+  if (!voiceOn) return;
+  if ('speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN';
+      u.rate = 1.0;
+      u.pitch = 1.15;
+      const vs = window.speechSynthesis.getVoices();
+      const zh = vs.find(function (v) { return /^zh/i.test(v.lang) && /(female|xiaoxiao|tingting|meijia|yaoyao|女)/i.test(v.name); }) ||
+                 vs.find(function (v) { return /^zh/i.test(v.lang); });
+      if (zh) u.voice = zh;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+    return;
+  }
+  /* 兜底：Web Audio 合成可爱小旋律（无法朗读时也有声音反馈） */
+  tone(659, 0.12, 0.2, 'triangle');
+  tone(880, 0.18, 0.2, 'triangle', 0.12);
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+  $(id).classList.add('active');
+}
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function () { t.classList.remove('show'); }, 1600);
+}
+
+/* ---------- 消气进度条 ---------- */
+let calmProgress = 0;
+let calmDone = false;
+
+function addProgress(p) {
+  if (calmDone) return;
+  calmProgress = Math.min(100, calmProgress + p);
+  $('calmFill').style.transform = 'scaleX(' + (calmProgress / 100) + ')';  // scaleX 替代 width，避免 layout
+  $('calmNum').textContent = calmProgress + '%';
+  if (calmProgress >= 100) {
+    calmDone = true;
+    $('calmBar').classList.add('full');
+    $('calmNum').textContent = '100%';
+    playDone();
+    toast('💯 消气进度满格啦！');
+    setTimeout(goReconcile, 800);
+  }
+}
+
+/* ---------- Web Audio 合成音效（零外部依赖） ---------- */
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    const A = window.AudioContext || window.webkitAudioContext;
+    if (!A) return null;
+    audioCtx = new A();
+  }
+  if (audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch (e) {} }
+  return audioCtx;
+}
+function tone(freq, dur, vol, type, delay) {
+  const c = getAudio(); if (!c) return;
+  const t = c.currentTime + (delay || 0);
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = type || 'sine';
+  o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol || 0.2, t + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+function playPop() {   // 泡泡“啵”声
+  tone(620 + Math.random() * 220, 0.13, 0.22, 'sine');
+  tone(300, 0.1, 0.12, 'triangle', 0.01);
+}
+function playWin() {   // 通关小旋律
+  tone(523, 0.12, 0.2, 'triangle');
+  tone(659, 0.12, 0.2, 'triangle', 0.11);
+  tone(784, 0.22, 0.22, 'triangle', 0.22);
+}
+function playDone() {  // 进度满格音
+  tone(659, 0.14, 0.22, 'triangle');
+  tone(880, 0.14, 0.22, 'triangle', 0.12);
+  tone(1175, 0.28, 0.24, 'triangle', 0.24);
+}
+
+/* ---------- 漂浮爱心背景 ---------- */
+(function initHearts() {
+  const bg = $('heartsBg');
+  const emojis = ['💗', '💖', '💕', '💘', '🩷', '💞'];
+  for (let i = 0; i < 10; i++) {   // 10 颗漂浮爱心（减少 DOM 节点，性能优化）
+    const h = document.createElement('span');
+    h.className = 'heart-f';
+    h.textContent = emojis[i % emojis.length];
+    h.style.left = (Math.random() * 94 + 3) + '%';
+    h.style.fontSize = (Math.random() * 14 + 14) + 'px';
+    h.style.animationDuration = (Math.random() * 5 + 6) + 's';
+    h.style.animationDelay = (Math.random() * 8) + 's';
+    bg.appendChild(h);
+  }
+})();
+
+/* ---------- 打字机效果 ---------- */
+function typeLetter(lines, done) {
+  const box = $('letterBody');
+  box.textContent = '';
+  let li = 0, ci = 0;
+  function step() {
+    if (li >= lines.length) { if (done) done(); return; }
+    const line = lines[li];
+    if (ci < line.length) {
+      box.textContent += line[ci];   // 增量追加，避免每次重建整封信（性能优化）
+      ci++;
+      setTimeout(step, 55);
+    } else {
+      li++; ci = 0;
+      box.textContent += '\n';
+      setTimeout(step, 220);
+    }
+  }
+  step();
+}
+
+/* ---------- 流程：开场 → 生气程度 → 道歉书 ---------- */
+let angerLevel = 'medium';             // v5：当前生气程度 mild / medium / severe
+function openLetter() {
+  $('letterTitle').textContent = CONFIG.letterTitle;
+  $('letterSign').textContent = '—— ' + letterSign;
+  show('screen-letter');
+  typeLetter(letterLines, function () { addProgress(CONFIG.progress.letter); });
+}
+$('btnOpen').addEventListener('click', function () {
+  $('openingTitle').textContent = CONFIG.openingTitle;
+  show('screen-anger');                // 先选生气程度
+});
+$('btnAngerMild').addEventListener('click', function ()   { angerLevel = 'mild';   openLetter(); });
+$('btnAngerMedium').addEventListener('click', function () { angerLevel = 'medium'; openLetter(); });
+$('btnAngerSevere').addEventListener('click', function () { angerLevel = 'severe'; openLetter(); });
+
+/* ---------- 和好 ---------- */
+let reconciled = false;
+function goReconcile() {
+  if (reconciled) return;
+  reconciled = true;
+  clearReminder();   // 和好啦，取消等原谅提醒
+  $('gameOverlay').classList.remove('active');
+  show('screen-reconcile');
+  startFireworks();
+  setTimeout(function () { show('screen-ending'); stopFireworks(); }, 5200);
+}
+$('btnForgive').addEventListener('click', goReconcile);
+$('btnForgive2').addEventListener('click', goReconcile);
+
+/* ---------- 还生气 → 回忆杀（时光胶囊） ---------- */
+let memIdx = 0;
+function showMemory(i) {
+  const m = CONFIG.memories[i];
+  $('memoryEmoji').textContent = m.emoji;
+  $('memoryDate').textContent = m.date;
+  $('memoryText').textContent = m.text;
+  const dots = $('memoryDots');
+  dots.innerHTML = '';
+  CONFIG.memories.forEach(function (_, k) {
+    const d = document.createElement('span');
+    if (k === i) d.className = 'on';
+    dots.appendChild(d);
+  });
+  addProgress(CONFIG.progress.memory);
+  const last = i >= CONFIG.memories.length - 1;
+  $('btnMemNext').style.display = last ? 'none' : '';
+  $('btnMemDone').style.display = last ? '' : 'none';
+  $('btnMemDone').textContent = last ? '回忆完啦，继续哄我！🎉' : '';
+}
+$('btnAngry').addEventListener('click', function () {
+  if (angerLevel === 'mild') {          // v5：轻度生气 → 跳过回忆杀，直接进甜话
+    enterBook();
+    return;
+  }
+  memIdx = 0;
+  show('screen-memories');
+  showMemory(0);
+});
+$('btnMemNext').addEventListener('click', function () {
+  if (memIdx < CONFIG.memories.length - 1) { memIdx++; showMemory(memIdx); }
+});
+$('btnMemDone').addEventListener('click', enterBook);
+
+/* v5：按生气程度配置哄人宝典（轻度=无泡泡，重度=强制戳泡泡） */
+function enterBook() {
+  show('screen-book');
+  addProgress(CONFIG.progress.enterBook);
+  const severe = angerLevel === 'severe';
+  $('btnPlayGame').style.display = angerLevel === 'mild' ? 'none' : '';
+  $('gameReqHint').style.display = severe ? '' : 'none';
+  $('btnForgive2').disabled = severe;   // 重度：戳完泡泡才能直接原谅（游戏通关会自动和好）
+  setDailyHint();
+  nextSweetLine();
+}
+function setDailyHint() {
+  $('dailyHint').textContent = (todayDaily && !dailyShownToday)
+    ? '🌟 今日隐藏甜话：再点 ' + Math.max(1, CONFIG.dailyRevealAt - sweetCount) + ' 次「再哄一句」解锁！'
+    : '';
+}
+
+let lastIdx = -1;
+let sweetCount = 0;
+function nextSweetLine() {
+  sweetCount++;
+  let line, isDaily = false;
+  if (sweetCount === CONFIG.dailyRevealAt && todayDaily && !dailyShownToday) {
+    /* v6：每日限定彩蛋——今天第 N 句甜话解锁隐藏款 */
+    line = todayDaily;
+    isDaily = true;
+    dailyShownToday = true;
+    try { localStorage.setItem('apology.dailyShown.date', DAILY_KEY); } catch (e) {}
+    toast('🌟 今日限定彩蛋解锁！');
+  } else {
+    let idx;
+    do { idx = Math.floor(Math.random() * CONFIG.sweetLines.length); }
+    while (idx === lastIdx && CONFIG.sweetLines.length > 1);
+    lastIdx = idx;
+    line = CONFIG.sweetLines[idx];
+  }
+  $('sweetText').textContent = line;
+  speakSweet(line);                     // v6：语音哄话（开关控制）
+  /* 连续生成：把历史甜话追加进列表（避免只显示一条） */
+  const list = $('sweetList');
+  const item = document.createElement('div');
+  item.className = 'sweet-item' + (isDaily ? ' daily' : '');
+  item.innerHTML = '<span class="n">' + (isDaily ? '🌟' : '#' + sweetCount) + '</span><span>' + line + '</span>';
+  list.insertBefore(item, list.firstChild);
+  while (list.children.length > 6) list.removeChild(list.lastChild);
+  addProgress(CONFIG.progress.sweetLine);
+  setDailyHint();
+}
+$('btnNextLine').addEventListener('click', nextSweetLine);
+
+/* ---------- 戳破生气泡泡小游戏 ---------- */
+let gameLevel = 0;
+let poppedCount = 0;
+
+$('btnPlayGame').addEventListener('click', function () {
+  $('gameOverlay').classList.add('active');
+  gameLevel = 0;
+  setupLevel();
+});
+
+$('btnExitGame').addEventListener('click', function () {
+  if (angerLevel === 'severe') {        // v5：重度生气不许逃票
+    toast('😡 重度生气中：戳破全部泡泡才能和好哦！');
+    return;
+  }
+  $('gameOverlay').classList.remove('active');
+  toast('泡泡不戳啦，那就直接和好吧！');
+  goReconcile();
+});
+
+function setupLevel() {
+  poppedCount = 0;
+  const lv = CONFIG.gameLevels[gameLevel];
+  $('gameLevelLabel').textContent = lv.name;
+  updateHUD();
+  const area = $('gameArea');
+  area.innerHTML = '';
+  for (let i = 0; i < lv.need; i++) spawnBubble();
+  $('gameMsg').textContent = lv.name + '：戳破 ' + lv.need + ' 个生气泡泡！';
+}
+
+function updateHUD() {
+  const lv = CONFIG.gameLevels[gameLevel];
+  $('gameScoreLabel').textContent = '💥 ' + poppedCount + ' / ' + lv.need;
+}
+
+function spawnBubble() {
+  const area = $('gameArea');
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.textContent = Math.random() < 0.5 ? '😠' : '😾';
+  const w = area.clientWidth || 320;
+  const h = area.clientHeight || 420;
+  const size = 62 + Math.random() * 26;
+  b.style.width = size + 'px';
+  b.style.height = size + 'px';
+  b.style.fontSize = (size * 0.46) + 'px';
+  b.style.left = (Math.random() * Math.max(10, w - size - 10)) + 'px';
+  b.style.top = (Math.random() * Math.max(10, h - size - 10)) + 'px';
+  b.style.animationDelay = (-Math.random() * 2.4) + 's';
+  b.addEventListener('click', function () { popBubble(b); });
+  area.appendChild(b);
+}
+
+function popBubble(b) {
+  if (b.classList.contains('pop')) return;
+  b.classList.add('pop');
+  b.textContent = '💥';
+  poppedCount++;
+  playPop();
+  addProgress(CONFIG.progress.bubble);
+  updateHUD();
+  const lv = CONFIG.gameLevels[gameLevel];
+  if (poppedCount >= lv.need) {
+    setTimeout(function () {
+      if (gameLevel < CONFIG.gameLevels.length - 1) {
+        gameLevel++;
+        toast('🎉 ' + lv.name + ' 通过！进入' + CONFIG.gameLevels[gameLevel].name);
+        setupLevel();
+      } else {
+        playWin();
+        toast('🎉 所有泡泡都戳破啦！');
+        $('gameOverlay').classList.remove('active');
+        goReconcile();
+      }
+    }, 350);
+  }
+  setTimeout(function () { b.remove(); }, 360);
+}
+
+/* ---------- 全屏爱心烟花 ---------- */
+const FIREWORK_COLORS = ['#ff8fab', '#e75480', '#ff5c8a', '#ffc2d1', '#ff9eb5', '#ff4d6d'];
+let fxRaf = null;
+let fxTimer = null;
+
+function drawHeartShape(ctx, x, y, s, color, rot) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rot);
+  ctx.scale(s, s);
+  ctx.beginPath();
+  ctx.moveTo(0, 0.32);
+  ctx.bezierCurveTo(0.55, -0.18, 1.05, 0.28, 0, 0.92);
+  ctx.bezierCurveTo(-1.05, 0.28, -0.55, -0.18, 0, 0.32);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawStarShape(ctx, x, y, s, color, rot) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rot);
+  ctx.scale(s, s);
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? 1 : 0.42;
+    const a = (Math.PI / 5) * i - Math.PI / 2;
+    const px = Math.cos(a) * r;
+    const py = Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function spawnBeam(parts, cv, ctx) {
+  const x = Math.random() * cv.width;
+  const w = 5 + Math.random() * 16;
+  const len = w * 130;
+  /* 渐变只在创建时生成一次，避免每帧 createLinearGradient（性能优化） */
+  const grad = ctx.createLinearGradient(0, 0, 0, len);
+  grad.addColorStop(0, Math.random() < 0.5 ? '#ffe9a8' : '#ffd6e7');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  parts.push({
+    type: 'beam',
+    x: x, y: 0,
+    vx: 0, vy: 3 + Math.random() * 4,
+    size: w, rot: 0, vr: 0,
+    len: len, grad: grad,
+    life: 1
+  });
+}
+
+function startFireworks() {
+  stopFireworks();
+  const cv = $('fx');
+  const ctx = cv.getContext('2d');
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+  const MAX_PARTS = 320;               // 粒子数上限（低端机性能保护）
+  const parts = [];
+  function burst(x, y) {
+    const room = MAX_PARTS - parts.length;
+    if (room <= 8) return;             // 达到上限就不再生成
+    const n = Math.min(26 + Math.floor(Math.random() * 14), room);
+    for (let i = 0; i < n; i++) {
+      const ang = (Math.PI * 2 * i) / n + Math.random() * 0.3;
+      const sp = 1.5 + Math.random() * 3.6;
+      const r = Math.random();
+      parts.push({
+        type: r < 0.55 ? 'heart' : 'star',
+        x: x, y: y,
+        vx: Math.cos(ang) * sp,
+        vy: Math.sin(ang) * sp - 1.2,
+        size: 0.6 + Math.random() * 0.9,
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.24,
+        color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
+        life: 1
+      });
+    }
+  }
+  let last = performance.now();
+  function tick(now) {
+    /* 时间步进归一化：60/90/120Hz 屏幕粒子速度一致，高刷屏不会“飞”太快 */
+    const dt = Math.min(2.5, (now - last) / 16.67 || 1);
+    last = now;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 0.05 * dt;
+      p.rot += p.vr * dt;
+      p.life -= 0.014 * dt;
+      if (p.life <= 0) { parts.splice(i, 1); continue; }
+      if (p.type === 'beam') {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.globalAlpha = Math.max(p.life, 0) * 0.35;
+        ctx.fillStyle = p.grad;        // 缓存渐变，零每帧开销
+        ctx.fillRect(-p.size / 2, 0, p.size, p.len);
+        ctx.restore();
+      } else {
+        ctx.globalAlpha = Math.max(p.life, 0);
+        if (p.type === 'star') drawStarShape(ctx, p.x, p.y, p.size, p.color, p.rot);
+        else drawHeartShape(ctx, p.x, p.y, p.size, p.color, p.rot);
+      }
+    }
+    ctx.globalAlpha = 1;
+    fxRaf = requestAnimationFrame(tick);
+  }
+  fxTimer = setInterval(function () {
+    if (Math.random() < 0.3) spawnBeam(parts, cv, ctx);
+    burst(Math.random() * cv.width, Math.random() * cv.height * 0.6);
+  }, 380);
+  spawnBeam(parts, cv, ctx);
+  burst(cv.width / 2, cv.height * 0.42);
+  fxRaf = requestAnimationFrame(tick);
+}
+
+function stopFireworks() {
+  if (fxTimer !== null) { clearInterval(fxTimer); fxTimer = null; }
+  if (fxRaf !== null) { cancelAnimationFrame(fxRaf); fxRaf = null; }
+  const cv = $('fx');
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+}
+
+/* resize 防抖：避免快速旋转/缩放时反复重置 canvas（性能优化） */
+let resizeTimer = null;
+window.addEventListener('resize', function () {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function () {
+    const cv = $('fx');
+    cv.width = window.innerWidth;
+    cv.height = window.innerHeight;
+  }, 250);
+});
+
+/* ---------- 抱抱计数器 & 隐藏彩蛋 ---------- */
+function playHug() {   // 抱抱软软音
+  tone(392, 0.16, 0.2, 'sine');
+  tone(494, 0.22, 0.18, 'sine', 0.1);
+}
+function playEaster() { // 彩蛋华丽音
+  tone(523, 0.12, 0.2, 'triangle');
+  tone(659, 0.12, 0.2, 'triangle', 0.1);
+  tone(784, 0.12, 0.2, 'triangle', 0.2);
+  tone(1047, 0.3, 0.24, 'triangle', 0.3);
+  tone(1319, 0.4, 0.2, 'triangle', 0.42);
+}
+let hugCount = 0;
+let eggUnlocked = false;
+function triggerEasterEgg() {
+  if (eggUnlocked) return;
+  eggUnlocked = true;
+  playEaster();
+  const ov = $('easterOverlay');
+  ov.classList.add('active');
+  /* 彩蛋金色闪光粒子 */
+  const sparks = ['✨', '🌟', '💛', '⭐', '🎉', '💫'];
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement('span');
+    s.className = 'easter-spark';
+    s.textContent = sparks[i % sparks.length];
+    s.style.left = (Math.random() * 88 + 6) + '%';
+    s.style.top = (Math.random() * 88 + 6) + '%';
+    s.style.animationDelay = (Math.random() * 1.6) + 's';
+    s.style.fontSize = (Math.random() * 16 + 16) + 'px';
+    ov.appendChild(s);
+  }
+}
+$('btnHug').addEventListener('click', function () {
+  hugCount++;
+  playHug();
+  $('hugCount').innerHTML = '已抱抱 <b>' + hugCount + '</b> 次' + (hugCount % 5 === 0 ? ' 🥰' : '');
+  if (hugCount >= CONFIG.hugTarget) triggerEasterEgg();
+});
+$('btnEasterClose').addEventListener('click', function () {
+  $('easterOverlay').classList.remove('active');
+  toast('💝 99 个抱抱已存档，爱你 +∞！');
+});
+
+/* ---------- v6：语音哄话开关 ---------- */
+$('btnVoice').addEventListener('click', function () {
+  voiceOn = !voiceOn;
+  try { localStorage.setItem('apology.voice.on', voiceOn ? '1' : '0'); } catch (e) {}
+  setVoiceLabel();
+  toast(voiceOn ? '🔊 语音哄话已开启' : '🔇 语音哄话已关闭');
+});
+setVoiceLabel();
+
+/* ---------- v5：道歉信编辑器 ---------- */
+$('btnEditLetter').addEventListener('click', function () {
+  $('editorText').value = letterLines.join('\n');
+  $('editorSign').value = letterSign;
+  $('letterEditor').classList.add('active');
+});
+$('btnEditorSave').addEventListener('click', function () {
+  const raw = $('editorText').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+  if (!raw.length) { toast('道歉信不能是空的哦'); return; }
+  letterLines = raw;
+  letterSign = $('editorSign').value.trim() || CONFIG.letterSign;
+  try {
+    localStorage.setItem(LS_LINES, JSON.stringify(letterLines));
+    localStorage.setItem(LS_SIGN, letterSign);
+  } catch (e) {}
+  $('letterEditor').classList.remove('active');
+  toast('💾 道歉信已保存，下次打开依然生效');
+});
+$('btnEditorReset').addEventListener('click', function () {
+  try { localStorage.removeItem(LS_LINES); localStorage.removeItem(LS_SIGN); } catch (e) {}
+  letterLines = CONFIG.letter.slice();
+  letterSign = CONFIG.letterSign;
+  $('editorText').value = letterLines.join('\n');
+  $('editorSign').value = letterSign;
+  toast('↩️ 已恢复默认道歉信');
+});
+$('btnEditorClose').addEventListener('click', function () {
+  $('letterEditor').classList.remove('active');
+});
+
+/* ---------- 消息提醒模式：等原谅提醒条 ---------- */
+let reminderTimer = null;
+function startReminderTimer() {
+  clearTimeout(reminderTimer);
+  reminderTimer = setTimeout(function () {
+    if (!reconciled) {
+      $('reminderEmoji').textContent = CONFIG.reminderEmoji;
+      $('reminderText').textContent = CONFIG.reminderText;
+      $('reminder').classList.add('show');
+    }
+  }, CONFIG.reminderMinutes * 60 * 1000);
+}
+function clearReminder() {
+  clearTimeout(reminderTimer);
+  reminderTimer = null;
+  $('reminder').classList.remove('show');
+}
+/* 打开页面即开始计时；和好后自动取消 */
+startReminderTimer();
+
+/* ---------- 结尾 ---------- */
+$('endSig').textContent = CONFIG.endSignature;
+$('btnReplay').addEventListener('click', function () { location.reload(); });
+</script>
+</body>
+</html>
