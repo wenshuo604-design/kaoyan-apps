@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>考研应用集 · 导航</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+         background:linear-gradient(160deg,#667eea,#764ba2); min-height:100vh; padding:36px 16px; }
+  header { text-align:center; color:#fff; margin-bottom:28px; }
+  .logo { font-size:52px; }
+  h1 { font-size:24px; margin:10px 0 6px; letter-spacing:2px; }
+  .sub { font-size:13px; opacity:.85; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; max-width:760px; margin:0 auto; }
+  .card { display:flex; flex-direction:column; gap:6px; background:rgba(255,255,255,.14);
+          backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.25); border-radius:16px;
+          padding:18px 14px; text-decoration:none; color:#fff; transition:transform .15s; }
+  .card:active { transform:scale(.97); }
+  .ico { font-size:30px; }
+  .name { font-size:15px; font-weight:600; }
+  .desc { font-size:11px; opacity:.75; line-height:1.5; }
+  footer { text-align:center; margin-top:28px; font-size:12px; color:rgba(255,255,255,.6); line-height:1.8; }
+  @media (min-width:640px){ .grid{ grid-template-columns:repeat(3,1fr); } .card{ padding:22px 16px; } }
+</style>
+</head>
+<body>
+<header><div class="logo">🦐</div><h1>考研应用集</h1><div class="sub">7 个应用 · 手机浏览器直接打开</div></header>
+<main class="grid">
+  <a class="card" href="./cuotiben/index.html" target="_blank"><span class="ico">📚</span><span class="name">考研错题本</span><span class="desc">错题录入 · 艾宾浩斯复习打卡</span></a>
+  <a class="card" href="./lover-capsule/index.html" target="_blank"><span class="ico">💌</span><span class="name">恋爱时光胶囊</span><span class="desc">甜蜜回忆 · 时光存档</span></a>
+  <a class="card" href="./couple-quiz/index.html" target="_blank"><span class="ico">💞</span><span class="name">情侣默契大考验</span><span class="desc">默契测试 · 甜蜜问答</span></a>
+  <a class="card" href="./kaoyan-dashboard/index.html" target="_blank"><span class="ico">🎯</span><span class="name">考研总控台</span><span class="desc">学习工作台 · 数据总览</span></a>
+  <a class="card" href="./apology-app/index.html" target="_blank"><span class="ico">🌹</span><span class="name">哄女友神器</span><span class="desc">道歉 · 哄人 · 惊喜</span></a>
+  <a class="card" href="./webpage-kaoyan-major/index.html" target="_blank"><span class="ico">📘</span><span class="name">专业课刷题小程序</span><span class="desc">机械原理 · 液压传动 · 刷题</span></a>
+  <a class="card" href="./gaoshu2/index.html" target="_blank"><span class="ico">📈</span><span class="name">高数二复盘助手</span><span class="desc">知识点复盘 · 知识包</span></a>
+</main>
+<footer>数据保存在你的手机浏览器本地 · 欢迎使用</footer>
+</body>
+</html>
