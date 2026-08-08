@@ -1,0 +1,2189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff6b9d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="情侣默契大考验：20 道甜蜜问题，测测你们有多懂彼此。支持自定义题目与历史最佳默契纪录。与恋爱时光胶囊配套的小礼物。">
+<title>💘 情侣默契大考验</title>
+<style>
+:root{
+  --rose:#ff6b9d; --rose2:#ff8fab; --deep:#e0507e; --hot:#ff4d6d;
+  --blue:#6aa9ff; --blue2:#8ec5ff; --blueDeep:#4a8fe0;
+  --card:#ffffff; --cream:#fff5f8;
+  --text:#4a2b38; --text2:#9a6b7c;
+  --line:#ffe0ea; --lineB:#dbe8ff;
+  --gold:#ffb347;
+  --shadow:0 10px 28px rgba(255,107,157,.16);
+  --radius:20px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",sans-serif;
+  background:linear-gradient(160deg,#ffe3ef 0%,#f3ecff 48%,#dce9ff 100%);
+  color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:15px;
+  overflow-x:hidden;touch-action:manipulation;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input{font-family:inherit}
+
+/* ============ 漂浮爱心背景 ============ */
+.bg-hearts{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-hearts span{
+  position:absolute;bottom:-60px;opacity:.16;user-select:none;
+  animation:rise linear infinite;
+}
+@keyframes rise{
+  0%{transform:translateY(0) rotate(-10deg);opacity:0}
+  12%{opacity:.18}
+  88%{opacity:.14}
+  100%{transform:translateY(-110vh) rotate(14deg);opacity:0}
+}
+
+/* ============ 撒花画布 ============ */
+#confetti{position:fixed;inset:0;z-index:60;pointer-events:none}
+
+.wrap{max-width:520px;margin:0 auto;padding:calc(22px + var(--safe-top)) 16px calc(30px + var(--safe-bottom));position:relative;z-index:1}
+
+.screen{display:none;animation:fadeUp .45s ease both}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+.card{
+  background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:24px 20px;
+}
+
+/* ============ 开始页 ============ */
+.logo{text-align:center;margin:10px 0 22px}
+.logo .heart{font-size:58px;display:inline-block;animation:beat 1.6s ease-in-out infinite}
+.logo h1{margin:10px 0 6px;font-size:30px;font-weight:900;letter-spacing:2px;
+  background:linear-gradient(120deg,var(--hot),var(--deep) 45%,var(--blueDeep));-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo p{margin:0;color:var(--text2);font-size:14px;letter-spacing:1px}
+@keyframes beat{0%,100%{transform:scale(1)}25%{transform:scale(1.12)}40%{transform:scale(.96)}60%{transform:scale(1.08)}}
+
+.name-row{display:flex;gap:12px;margin:18px 0}
+.name-box{flex:1;text-align:center}
+.name-box .tag{display:inline-block;font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;margin-bottom:8px;color:#fff}
+.tag.a{background:linear-gradient(135deg,var(--rose2),var(--hot))}
+.tag.b{background:linear-gradient(135deg,var(--blue2),var(--blueDeep))}
+.name-box input{
+  width:100%;text-align:center;font-size:16px;padding:12px 8px;border-radius:14px;
+  border:1.5px solid var(--line);background:#fff;color:var(--text);outline:none;
+  transition:border-color .2s;
+}
+.name-box input:focus{border-color:var(--rose)}
+.name-box.b input:focus{border-color:var(--blue)}
+.name-box .ph{font-size:12px;color:var(--text2);margin-top:6px}
+
+.rules{margin:6px 0 20px;padding:0;list-style:none}
+.rules li{position:relative;padding:8px 0 8px 30px;font-size:14px;color:var(--text);line-height:1.6}
+.rules li::before{content:'💗';position:absolute;left:2px;top:8px;font-size:15px}
+.rules li em{font-style:normal;font-weight:700;color:var(--deep)}
+.rules.battle li::before{content:'⚔️'}
+
+/* 深色模式切换（开始页右上角） */
+.start-tools{display:flex;justify-content:flex-end;margin:-4px 0 12px}
+.dark-toggle{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:800;
+  color:var(--deep);background:#fff;border:1.5px solid var(--line);transition:transform .15s ease}
+.dark-toggle:active{transform:scale(.94)}
+
+.btn-primary{
+  display:block;width:100%;padding:16px;border-radius:999px;font-size:17px;font-weight:800;letter-spacing:2px;color:#fff;
+  background:linear-gradient(135deg,#ff8fab 0%,#ff5c8a 55%,#e0507e 100%);
+  box-shadow:0 10px 24px rgba(224,80,126,.35);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.btn-primary:active{transform:scale(.96)}
+.btn-blue{
+  display:block;width:100%;padding:16px;border-radius:999px;font-size:16px;font-weight:800;letter-spacing:2px;color:#fff;
+  background:linear-gradient(135deg,#8ec5ff 0%,#5aa7ff 60%,#4a8fe0 100%);
+  box-shadow:0 10px 24px rgba(90,167,255,.35);
+  transition:transform .15s ease;
+}
+.btn-blue:active{transform:scale(.96)}
+.btn-primary:hover:not(:disabled),.btn-blue:hover:not(:disabled),.btn-ghost:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.06)}
+.btn-ghost:active{transform:scale(.96)}
+.opt{transition:transform .18s ease, box-shadow .18s ease, background .2s ease, border-color .2s ease}
+.opt:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(224,80,126,.16)}
+
+/* ============ 答题页 ============ */
+.topbar{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.sound-toggle{flex:0 0 auto;width:36px;height:36px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:16px;background:#fff;border:1.5px solid var(--line);transition:transform .15s ease,background .2s}
+.sound-toggle:active{transform:scale(.9)}
+.sound-toggle.off{background:#f1f1f4;filter:grayscale(1);opacity:.7}
+.topbar .round-chip{
+  font-size:13px;font-weight:800;color:var(--deep);background:#ffe9f1;border:1px solid var(--line);
+  padding:6px 14px;border-radius:999px;
+}
+.timer{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:58px;
+  font-size:13px;font-weight:800;color:var(--blueDeep);background:#eef4ff;border:1px solid var(--lineB);
+  padding:6px 10px;border-radius:999px;margin-left:auto;transition:color .2s,background .2s}
+.timer.warn{color:#fff;background:linear-gradient(135deg,#ff8fab,#f43f5e);animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+/* 挑战赛：3 分钟总倒计时（mm:ss），最后 30 秒紧迫脉冲 */
+.timer.challenge{min-width:80px;font-size:15px;background:linear-gradient(135deg,#fff3e0,#ffe0b2);color:#ea580c;border-color:#ffd166}
+.timer.challenge.warn{background:linear-gradient(135deg,#f97316,#dc2626);color:#fff;animation:urgent .5s ease-in-out infinite}
+@keyframes urgent{0%,100%{transform:scale(1)}50%{transform:scale(1.13)}}
+.progress{flex:1;height:10px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid var(--line);margin-left:12px;overflow:hidden}
+.progress i{display:block;height:100%;width:0%;border-radius:999px;
+  background:linear-gradient(90deg,#ff8fab,#ff5c8a 60%,#6aa9ff);transition:width .4s ease}
+
+.turn-chip{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:800;color:#fff;
+  padding:9px 16px;border-radius:999px;margin-bottom:14px;animation:fadeUp .3s ease}
+.turn-chip.a{background:linear-gradient(135deg,var(--rose2),var(--hot));box-shadow:0 8px 18px rgba(255,77,109,.3)}
+.turn-chip.b{background:linear-gradient(135deg,var(--blue2),var(--blueDeep));box-shadow:0 8px 18px rgba(90,167,255,.3)}
+
+/* 题目卡片：3D 翻转切换 */
+.q-card{background:linear-gradient(135deg,#fff0f6 0%,#eef4ff 100%);border:1.5px solid var(--line);
+  border-radius:18px;padding:18px 16px;margin-bottom:16px;perspective:900px}
+.q-card .q-inner{transform-style:preserve-3d;transition:transform .42s cubic-bezier(.45,.05,.35,1)}
+.q-card.flipping .q-inner{transform:rotateY(180deg)}
+.q-num{font-size:12px;font-weight:800;color:var(--rose);letter-spacing:2px;margin-bottom:8px}
+.q-text{margin:0;font-size:19px;font-weight:800;line-height:1.5;color:var(--text)}
+
+/* 选项交错入场 */
+.opt-list{display:grid;gap:12px;margin-top:6px}
+.opt-list .opt{animation:fadeUp .3s ease both}
+.opt-list .opt:nth-child(1){animation-delay:.04s}
+.opt-list .opt:nth-child(2){animation-delay:.1s}
+.opt-list .opt:nth-child(3){animation-delay:.16s}
+.opt-list .opt:nth-child(4){animation-delay:.22s}
+.opt{
+  width:100%;text-align:left;display:flex;align-items:center;gap:12px;
+  background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:15px 14px;
+  font-size:16px;font-weight:600;color:var(--text);
+  box-shadow:0 4px 12px rgba(255,107,157,.08);
+  transition:transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.opt:active{transform:scale(.97)}
+.opt .key{
+  flex:0 0 30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:var(--deep);background:#ffe9f1;border:1px solid var(--line);
+}
+.opt .txt{flex:1}
+.opt.selected{background:linear-gradient(135deg,#ffe3ee,#ffd0e0);border-color:var(--rose)}
+.opt.selected .key{background:#fff;color:var(--hot)}
+.opt.guess-mode{border-color:var(--lineB)}
+.opt.guess-mode .key{background:#e9f2ff;color:var(--blueDeep);border-color:var(--lineB)}
+.opt.guess-mode.selected{background:linear-gradient(135deg,#e4efff,#d3e4ff);border-color:var(--blue)}
+.opt.guess-mode.selected .key{background:#fff;color:var(--blueDeep)}
+
+/* 猜测提示 */
+.guess-tip{text-align:center;margin:18px 0 4px;animation:fadeUp .35s ease}
+.guess-tip .big{font-size:21px;font-weight:900;color:var(--blueDeep);letter-spacing:1px}
+.guess-tip .small{font-size:13px;color:var(--text2);margin-top:4px}
+.guess-tip .small b{color:var(--deep)}
+
+/* 反馈卡片 */
+.fb{margin-top:18px;text-align:center;padding:20px 16px;border-radius:18px;animation:pop .4s ease both}
+.fb.match{background:linear-gradient(135deg,#ffe9f2,#e8f3ff);border:1.5px solid var(--rose)}
+.fb.miss{background:linear-gradient(135deg,#fff6e8,#ffeef4);border:1.5px solid #ffd9a0}
+.fb .face{font-size:44px;display:block;animation:beat 1.2s ease-in-out infinite}
+.fb .t1{margin:8px 0 4px;font-size:19px;font-weight:900}
+.fb.match .t1{color:var(--deep)}
+.fb.miss .t1{color:#d97706}
+.fb .t2{margin:0;font-size:14px;color:var(--text2);line-height:1.6}
+.fb .t2 b{color:var(--deep)}
+@keyframes pop{0%{transform:scale(.86);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+
+/* 连击彩蛋 */
+.combo{display:inline-block;margin-bottom:10px;font-size:14px;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,#ffb347,#ff7b2e);padding:6px 16px;border-radius:999px;
+  box-shadow:0 6px 16px rgba(255,123,46,.4)}
+.combo.pop{animation:comboPop .5s cubic-bezier(.2,1.4,.4,1) both}
+.combo.big{font-size:16px;background:linear-gradient(135deg,#ff8fab,#ff4d6d)}
+@keyframes comboPop{0%{transform:scale(.3) rotate(-6deg);opacity:0}60%{transform:scale(1.18) rotate(3deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+
+.btn-next{margin-top:16px}
+
+/* 对战模式交接卡片 */
+.handoff{text-align:center;margin-top:6px;animation:fadeUp .4s ease}
+.handoff-emoji{font-size:46px;animation:beat 1.4s ease-in-out infinite}
+.handoff-title{font-size:20px;font-weight:900;color:var(--deep);margin:8px 0 6px}
+.handoff-sub{font-size:14px;color:var(--text2);line-height:1.7;margin:0 0 16px}
+.handoff-sub b{color:var(--blueDeep)}
+
+.hidden{display:none!important}
+
+/* ============ 结果页 ============ */
+.result-heart{text-align:center;font-size:52px;margin-bottom:6px;animation:beat 1.4s ease-in-out infinite}
+.pct-wrap{text-align:center;margin:14px 0 6px}
+.pct-ring{position:relative;width:168px;height:168px;margin:0 auto}
+.pct-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.pct-ring .track{fill:none;stroke:#ffe0ea;stroke-width:12}
+.pct-ring .bar{fill:none;stroke:url(#pctGrad);stroke-width:12;stroke-linecap:round;
+  stroke-dasharray:472;stroke-dashoffset:472;transition:stroke-dashoffset 1.2s ease .3s}
+.pct-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pct-num{font-size:44px;font-weight:900;line-height:1;color:var(--deep)}
+.pct-label{font-size:12px;color:var(--text2);margin-top:4px;letter-spacing:2px}
+.level{margin:18px auto 0;text-align:center;font-size:17px;font-weight:900;color:var(--deep);
+  background:#ffe9f1;border:1px solid var(--line);padding:12px 18px;border-radius:999px;display:inline-block}
+.level-line{text-align:center}
+.level-desc{margin:10px 0 0;text-align:center;font-size:14px;color:var(--text2);line-height:1.7}
+
+.summary{margin:22px 0 6px}
+.summary-title{font-size:15px;font-weight:900;color:var(--deep);margin:0 0 12px;letter-spacing:1px}
+.sum-item{display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid var(--line);
+  border-radius:14px;padding:12px 14px;margin-bottom:10px;font-size:13px;line-height:1.55}
+.sum-item .mark{flex:0 0 22px;font-size:15px;text-align:center;margin-top:1px}
+.sum-item .mark.ok{color:#22c55e}
+.sum-item .mark.no{color:#f43f5e}
+.sum-item .sq{font-weight:800;color:var(--text)}
+.sum-item .sa{color:var(--text2);margin-top:2px}
+.sum-item .sa b{color:var(--deep)}
+.sum-item .sa b.blue{color:var(--blueDeep)}
+
+.btn-row{display:grid;gap:12px;margin-top:22px}
+.btn-ghost{display:block;width:100%;padding:15px;border-radius:999px;font-size:15px;font-weight:800;letter-spacing:1px;
+  color:var(--deep);background:#fff;border:1.5px solid var(--line)}
+.btn-ghost:active{transform:scale(.97)}
+
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;
+  background:linear-gradient(135deg,var(--rose2),var(--hot));color:#fff;font-size:12px;font-weight:800;margin-left:4px;vertical-align:middle}
+
+/* ============ 主题切换 ============ */
+.theme-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:2px 0 16px}
+.theme-btn{padding:12px 6px;border-radius:16px;font-size:13px;font-weight:800;letter-spacing:0;color:var(--text2);
+  background:#fff;border:1.5px solid var(--line);transition:all .2s ease}
+.theme-btn small{display:block;font-size:10px;font-weight:600;margin-top:3px;opacity:.85}
+.theme-btn:active{transform:scale(.96)}
+.theme-btn.active{color:#fff;border-color:transparent}
+.theme-btn.sweet.active{background:linear-gradient(135deg,#ff8fab,#e0507e);box-shadow:0 8px 18px rgba(224,80,126,.25)}
+.theme-btn.travel.active{background:linear-gradient(135deg,#8ec5ff,#4a8fe0);box-shadow:0 8px 18px rgba(90,167,255,.3)}
+.theme-btn.daily.active{background:linear-gradient(135deg,#5eead4,#0d9488);box-shadow:0 8px 18px rgba(20,184,166,.3)}
+.theme-btn.memory.active{background:linear-gradient(135deg,#ffd166,#f59e0b);box-shadow:0 8px 18px rgba(245,158,11,.32)}
+
+/* ============ 模式切换（默契 / 对战 / 挑战赛） ============ */
+.mode-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 14px}
+.mode-btn{padding:13px 8px;border-radius:16px;font-size:15px;font-weight:800;letter-spacing:1px;color:var(--text2);
+  background:#fff;border:1.5px solid var(--line);transition:all .2s ease}
+.mode-btn small{display:block;font-size:11px;font-weight:600;margin-top:3px;opacity:.85}
+.mode-btn:active{transform:scale(.96)}
+.mode-btn.active{color:#fff;border-color:transparent}
+.mode-btn.coop.active{background:linear-gradient(135deg,#ff8fab,#e0507e);box-shadow:0 8px 18px rgba(224,80,126,.25)}
+.mode-btn.battle.active{background:linear-gradient(135deg,#a78bfa,#7c3aed);box-shadow:0 8px 18px rgba(124,58,237,.3)}
+.mode-btn.challenge.active{background:linear-gradient(135deg,#ffb347,#f97316);box-shadow:0 8px 18px rgba(249,115,22,.32)}
+
+/* ============ 历史最佳 ============ */
+.best-line{margin:12px auto 0;font-size:14px;font-weight:800;color:var(--blueDeep);
+  background:#eef4ff;border:1px solid var(--lineB);padding:10px 16px;border-radius:999px;display:inline-block;text-align:center}
+.best-line b{color:#e8842c}
+
+/* 最长连击（结果页） */
+.combo-line{margin:10px auto 0;font-size:13px;font-weight:800;color:#d97706;
+  background:#fff4e0;border:1px solid #ffe0a8;padding:8px 14px;border-radius:999px;display:inline-block;text-align:center}
+
+/* 挑战赛完成度（结果页） */
+.challenge-line{margin:10px auto 0;font-size:13px;font-weight:800;color:#ea580c;
+  background:#fff3e0;border:1px solid #ffd166;padding:8px 14px;border-radius:999px;display:inline-block;text-align:center}
+
+/* ============ 默契成长曲线（结果页） ============ */
+.history-card{background:#fff7fa;border:1.5px solid var(--line);border-radius:18px;padding:14px;margin-top:14px;text-align:left}
+.history-title{font-size:14px;font-weight:900;color:var(--deep);margin-bottom:4px;letter-spacing:1px;text-align:center}
+.history-sub{font-size:11px;color:var(--text2);margin:0 0 6px;text-align:center}
+.history-chart{width:100%;height:auto;display:block}
+.history-chart .h-grid{stroke:var(--line)}
+.history-chart .h-line{fill:none;stroke:url(#hGrad);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.history-chart .h-dot{stroke:#fff;stroke-width:1.4}
+.history-chart .h-label{font-size:9px;fill:var(--text2)}
+.history-chart .h-val{font-size:10px;font-weight:700;fill:var(--deep)}
+.history-empty{text-align:center;color:var(--text2);font-size:13px;padding:20px 0}
+
+/* ============ 分享卡片 ============ */
+.share-card{background:#fff7fa;border:1.5px solid var(--line);border-radius:18px;padding:16px;margin-top:16px;text-align:left}
+.share-title{font-size:14px;font-weight:900;color:var(--deep);margin-bottom:10px;letter-spacing:1px}
+.share-text{background:#fff;border:1.5px dashed var(--line);border-radius:14px;padding:12px 14px;
+  font-size:13px;line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
+.share-card .btn-blue{padding:13px;font-size:15px}
+
+/* ============ 自定义题目弹窗 ============ */
+.modal-mask{position:fixed;inset:0;z-index:80;background:rgba(74,43,56,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:18px;animation:fadeIn .25s ease}
+.modal-mask.hidden{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{width:100%;max-width:460px;max-height:86vh;overflow-y:auto;padding:22px 18px;text-align:left}
+.modal-title{margin:0 0 4px;font-size:19px;font-weight:900;color:var(--deep)}
+.modal-sub{margin:0 0 14px;font-size:13px;color:var(--text2);line-height:1.6}
+.custom-list{max-height:210px;overflow-y:auto;margin-bottom:14px}
+.c-empty{font-size:13px;color:var(--text2);text-align:center;padding:18px 8px;background:#fdf6f9;border:1.5px dashed var(--line);border-radius:14px}
+.c-item{position:relative;background:#fdf6f9;border:1px solid var(--line);border-radius:14px;padding:10px 40px 10px 12px;margin-bottom:8px}
+.c-item .c-q{font-size:13px;font-weight:800;color:var(--text);line-height:1.5}
+.c-item .c-o{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5}
+.c-del{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:10px;background:#ffe9f1;font-size:14px;color:var(--deep)}
+.c-del:active{transform:scale(.92)}
+.custom-form{background:#fff7fa;border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.custom-form input{width:100%;font-size:14px;padding:11px 12px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+  color:var(--text);outline:none;margin-bottom:9px;transition:border-color .2s}
+.custom-form input:focus{border-color:var(--rose)}
+.custom-form textarea{width:100%;font-size:14px;padding:11px 12px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+  color:var(--text);outline:none;margin-bottom:9px;transition:border-color .2s;resize:vertical;min-height:56px;font-family:inherit;line-height:1.5}
+.custom-form textarea:focus{border-color:var(--rose)}
+.custom-form .c-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.custom-form .c-opts input{margin-bottom:0}
+.custom-form .btn-blue{margin-top:9px;padding:13px;font-size:15px}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .3s ease;border-color:var(--hot)!important}
+
+/* ============ v10：题目配图 ============ */
+.q-img{width:100%;max-height:190px;object-fit:cover;border-radius:14px;margin:0 0 12px;border:1.5px solid var(--line);
+  display:block;background:#fdf2f7}
+.c-thumb{width:52px;height:52px;object-fit:cover;border-radius:10px;border:1.5px solid var(--line);margin:0 0 6px;display:block;background:#fdf2f7}
+
+/* ============ v10：默契证书（结果页，可保存为 PNG） ============ */
+.cert-card{background:linear-gradient(160deg,#fffdf5,#fff3e0);border:1.5px solid #f0d5a8;border-radius:18px;
+  padding:16px;margin-top:16px;text-align:center}
+.cert-title{font-size:16px;font-weight:900;color:#b45309;letter-spacing:1px}
+.cert-sub{font-size:12px;color:var(--text2);margin:4px 0 12px}
+#certCanvas{width:100%;height:auto;border-radius:12px;display:block;box-shadow:0 6px 18px rgba(180,83,9,.15);background:#fff}
+.cert-card .btn-blue{margin-top:12px;padding:12px 20px;font-size:15px}
+
+footer{text-align:center;color:var(--text2);font-size:12px;margin-top:26px;letter-spacing:1px}
+
+/* ============ v8 润色与动效优化 ============ */
+/* 结果页：爱心弹入后持续跳动 */
+.result-heart{animation:heartPop .6s cubic-bezier(.34,1.56,.64,1) both, beat 1.6s ease-in-out 1.1s infinite}
+@keyframes heartPop{0%{transform:scale(0) rotate(-18deg);opacity:0}60%{transform:scale(1.25) rotate(4deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+/* 高默契光环：90 分以上金色呼吸光晕 */
+.pct-wrap.glow .pct-ring{filter:drop-shadow(0 0 16px rgba(255,209,102,.9))}
+.pct-wrap.glow .pct-ring svg{animation:ringPulse 1.6s ease-in-out infinite}
+@keyframes ringPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+/* 等级名弹入 */
+.level-line{animation:levelPop .55s cubic-bezier(.34,1.56,.64,1) .5s both}
+@keyframes levelPop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+/* Logo 标题流光 */
+.logo h1{background-size:200% auto;animation:shimmer 3.5s linear infinite}
+@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+/* 进度条流动光泽 */
+.progress i{background:linear-gradient(90deg,#ff8fab,#ff5c8a 55%,#6aa9ff);background-size:200% 100%;animation:barFlow 2.4s linear infinite}
+@keyframes barFlow{0%{background-position:0% 0}100%{background-position:200% 0}}
+
+/* ============ 游戏统计卡（开始页） ============ */
+.stats-card{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 0}
+.stat-cell{background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:16px;padding:12px 6px;text-align:center;box-shadow:var(--shadow)}
+.stat-cell .num{font-size:20px;font-weight:900;color:var(--deep);line-height:1.2;white-space:nowrap}
+.stat-cell .lbl{font-size:11px;color:var(--text2);font-weight:700;margin-top:3px}
+.stat-cell .sub{font-size:10px;color:var(--text2);margin-top:2px}
+.stat-cell.gold{background:linear-gradient(135deg,#fff7e0,#ffe9b8);border-color:#ffd166}
+.stat-cell.gold .num{color:#d97706}
+
+/* ============ 成就墙（本地成就系统） ============ */
+.ach-card{background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-top:12px}
+.ach-head{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:900;color:var(--deep);letter-spacing:1px;margin-bottom:12px}
+.ach-count{font-size:11px;color:var(--text2);font-weight:700;background:rgba(255,255,255,.7);border:1px solid var(--line);padding:3px 10px;border-radius:999px}
+.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ach-item{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 6px;text-align:center;transition:transform .2s ease}
+.ach-item:active{transform:scale(.96)}
+.ach-item .ach-icon{font-size:26px;margin-bottom:4px}
+.ach-item .ach-name{font-size:12px;font-weight:800;color:var(--text);margin-bottom:2px}
+.ach-item .ach-desc{font-size:9.5px;color:var(--text2);line-height:1.4;min-height:26px}
+.ach-item .ach-prog{font-size:10px;font-weight:700;margin-top:6px;color:var(--blueDeep)}
+.ach-item.locked{background:rgba(255,255,255,.5);filter:grayscale(.9);opacity:.72}
+.ach-item.locked .ach-icon{filter:grayscale(1)}
+.ach-item.locked .ach-prog{color:var(--text2)}
+.ach-item.unlocked{border-color:#ffd166;background:linear-gradient(160deg,#fffdf5,#fff3d6)}
+.ach-item.unlocked .ach-name{color:#b45309}
+.ach-item.unlocked .ach-prog{color:#d97706}
+
+/* ============ 成就解锁提示（顶部 toast） ============ */
+.ach-toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:120;display:flex;align-items:center;gap:12px;
+  background:linear-gradient(135deg,#fff7e0,#ffe9b8);border:1.5px solid #ffd166;border-radius:16px;padding:12px 18px;
+  box-shadow:0 12px 30px rgba(180,83,9,.25);max-width:86vw}
+.ach-toast .t-icon{font-size:30px}
+.ach-toast .t-title{font-size:14px;font-weight:900;color:#b45309}
+.ach-toast .t-sub{font-size:12px;color:#92400e;margin-top:2px}
+.ach-toast.pop{animation:toastIn .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes toastIn{0%{transform:translate(-50%,-18px);opacity:0}100%{transform:translate(-50%,0);opacity:1}}
+
+/* ============ 隐藏评语（满分 100 解锁） ============ */
+.hidden-comment{margin:12px auto 0;font-size:13px;font-weight:800;padding:10px 16px;border-radius:999px;display:inline-block;text-align:center}
+.hidden-comment.locked{color:var(--text2);background:rgba(255,255,255,.7);border:1.5px dashed var(--line)}
+.hidden-comment.unlocked{color:#b45309;background:linear-gradient(135deg,#fff7e0,#ffe9b8);border:1.5px solid #ffd166}
+
+/* ============ 满分彩蛋全屏覆盖 ============ */
+.perfect-overlay{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;
+  background:rgba(20,10,30,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:overFade .35s ease both}
+.perfect-overlay.hidden{display:none}
+.perfect-box{background:linear-gradient(160deg,#fff9ec,#ffe9c4);border:3px solid #ffd166;border-radius:28px;padding:34px 30px;text-align:center;
+  max-width:86%;box-shadow:0 24px 60px rgba(217,119,6,.35);animation:boxIn .55s cubic-bezier(.34,1.56,.64,1) both}
+.perfect-box .pf-emoji{font-size:72px;line-height:1;animation:pfFloat 1.4s ease-in-out infinite}
+.perfect-box .pf-title{font-size:24px;font-weight:900;color:#b45309;margin:10px 0 6px;letter-spacing:2px}
+.perfect-box .pf-sub{font-size:14px;color:#92610f;line-height:1.8;margin:0 0 16px}
+.perfect-box .pf-btn{display:inline-block;padding:12px 30px;border-radius:999px;border:none;font-size:15px;font-weight:800;color:#fff;
+  background:linear-gradient(135deg,#fbbf24,#f59e0b);cursor:pointer;box-shadow:0 8px 18px rgba(217,119,6,.35);transition:transform .15s ease}
+.perfect-box .pf-btn:hover{transform:translateY(-2px)}
+.perfect-box .pf-btn:active{transform:scale(.95)}
+@keyframes boxIn{0%{transform:scale(.4) translateY(40px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+@keyframes pfFloat{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-10px) rotate(6deg)}}
+@keyframes overFade{from{opacity:0}to{opacity:1}}
+
+/* 尊重系统减弱动效偏好 */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* ============ 深色模式（html.dark） ============ */
+:root.dark{
+  --rose:#ff8fab; --rose2:#ff9fbd; --deep:#ff7ba6; --hot:#ff5c8a;
+  --blue:#7ab3ff; --blue2:#9cc9ff; --blueDeep:#6aa9ff;
+  --card:#2b2133; --cream:#2b2133;
+  --text:#f3e8f0; --text2:#b79aab;
+  --line:#4a3a52; --lineB:#3a4a66;
+  --gold:#ffc46b;
+  --shadow:0 10px 28px rgba(0,0,0,.38);
+}
+html.dark body{background:linear-gradient(160deg,#241a2e 0%,#241f33 48%,#1d2436 100%)}
+html.dark .card{background:rgba(43,33,51,.92);border-color:var(--line)}
+html.dark .name-box input,html.dark .custom-form input,html.dark .custom-form textarea{background:#241b2e;color:var(--text)}
+html.dark .opt{background:#241b2e}
+html.dark .opt .key{background:#3a2b44;color:var(--rose2)}
+html.dark .opt.selected{background:linear-gradient(135deg,#4a2a3d,#5a2740);border-color:var(--rose)}
+html.dark .opt.selected .key{background:#3a2b44;color:var(--hot)}
+html.dark .opt.guess-mode .key{background:#25344e;color:#8fc2ff;border-color:var(--lineB)}
+html.dark .opt.guess-mode.selected{background:linear-gradient(135deg,#243a55,#1f3350);border-color:var(--blue)}
+html.dark .q-card{background:linear-gradient(135deg,#33263c 0%,#26304a 100%)}
+html.dark .round-chip{background:#3a2b44;color:var(--rose2)}
+html.dark .timer{background:#27344d;color:#8fc2ff}
+html.dark .progress{background:rgba(255,255,255,.12)}
+html.dark .progress i{background:linear-gradient(90deg,#ff9fbd,#ff6b9d 60%,#7ab3ff)}
+html.dark .sound-toggle{background:#3a2f45}
+html.dark .sound-toggle.off{background:#2a2233;opacity:.65}
+html.dark .fb.match{background:linear-gradient(135deg,#3a2638,#263449)}
+html.dark .fb.miss{background:linear-gradient(135deg,#3a3026,#3a2631)}
+html.dark .level{background:#3a2b44;color:var(--rose2)}
+html.dark .best-line{background:#27344d;color:#8fc2ff}
+html.dark .combo-line{background:#3a2c22;border-color:#6b4a20;color:#ffc46b}
+html.dark .history-card{background:#332838;border-color:var(--line)}
+html.dark .history-chart .h-dot{stroke:#2b2133}
+html.dark .sum-item{background:#241b2e}
+html.dark .btn-ghost{background:#2b2133;color:var(--rose2)}
+html.dark .theme-btn,html.dark .mode-btn{background:#241b2e;color:var(--text2)}
+html.dark .dark-toggle{background:#2b2133;color:var(--rose2)}
+html.dark .share-card{background:#332838;border-color:var(--line)}
+html.dark .cert-card{background:linear-gradient(160deg,#3a2c22,#4a3418);border-color:#6b4a20}
+html.dark .cert-title{color:#ffc46b}
+html.dark .cert-sub{color:#c9a97a}
+html.dark .share-text{background:#241b2e}
+html.dark .c-empty,html.dark .c-item{background:#2e2438}
+html.dark .custom-form{background:#332838}
+html.dark .c-del{background:#3a2b44}
+html.dark .modal-mask{background:rgba(8,6,12,.62)}
+html.dark .pct-ring .track{stroke:#4a3a52}
+html.dark .stat-cell{background:#2b2133;border-color:var(--line)}
+html.dark .stat-cell .num{color:var(--rose2)}
+html.dark .stat-cell.gold{background:linear-gradient(135deg,#3a2c22,#4a3418);border-color:#6b4a20}
+html.dark .stat-cell.gold .num{color:#ffc46b}
+html.dark .hidden-comment.locked{background:rgba(43,33,51,.6)}
+html.dark .hidden-comment.unlocked{background:linear-gradient(135deg,#3a2c22,#4a3418);border-color:#6b4a20;color:#ffc46b}
+html.dark .challenge-line{background:#3a2c22;border-color:#6b4a20;color:#ffc46b}
+html.dark .timer.challenge{background:#3a2c22;color:#ffc46b;border-color:#6b4a20}
+html.dark .timer.challenge.warn{background:linear-gradient(135deg,#9a3412,#7f1d1d);color:#fff}
+html.dark .ach-card{background:rgba(43,33,51,.92);border-color:var(--line)}
+html.dark .ach-count{background:#241b2e}
+html.dark .ach-item{background:#241b2e;border-color:var(--line)}
+html.dark .ach-item.unlocked{background:linear-gradient(160deg,#3a2c22,#4a3418);border-color:#6b4a20}
+html.dark .ach-item.unlocked .ach-name{color:#ffc46b}
+html.dark .ach-item.unlocked .ach-prog{color:#ffc46b}
+html.dark .ach-toast{background:linear-gradient(135deg,#3a2c22,#4a3418);border-color:#6b4a20}
+html.dark .ach-toast .t-title{color:#ffc46b}
+html.dark .ach-toast .t-sub{color:#eab676}
+html.dark .perfect-overlay{background:rgba(10,6,16,.62)}
+html.dark .perfect-box{background:linear-gradient(160deg,#3a2c22,#4a3418);border-color:#6b4a20;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+html.dark .perfect-box .pf-title{color:#ffc46b}
+html.dark .perfect-box .pf-sub{color:#e8c98a}
+</style>
+</head>
+<body>
+<div class="bg-hearts" id="bgHearts" aria-hidden="true"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<main class="wrap">
+
+  <!-- ============ 开始页 ============ -->
+  <section id="screen-start" class="screen active">
+    <div class="logo">
+      <span class="heart">💘</span>
+      <h1>情侣默契大考验</h1>
+      <p>你们有多懂彼此？来测一测吧</p>
+    </div>
+
+    <div class="start-tools">
+      <button class="dark-toggle" id="darkToggle" title="深色 / 浅色切换">🌙 深色</button>
+    </div>
+
+    <div class="card">
+      <div class="mode-row">
+        <button class="mode-btn coop active" id="modeCoop">💑 默契考验<small>一人答·一人猜</small></button>
+        <button class="mode-btn battle" id="modeBattle">⚔️ 对战模式<small>各自答·对答案</small></button>
+        <button class="mode-btn challenge" id="modeChallenge">⚡ 挑战赛<small>20 题 · 3 分钟</small></button>
+      </div>
+      <div class="theme-row">
+        <button class="theme-btn sweet active" id="themeSweet">💕 甜蜜日常<small>日常默契题</small></button>
+        <button class="theme-btn travel" id="themeTravel">✈️ 旅行愿望<small>旅行心愿题</small></button>
+        <button class="theme-btn daily" id="themeDaily">🌿 日常默契<small>生活习惯题</small></button>
+        <button class="theme-btn memory" id="themeMemory">📮 回忆时光<small>甜蜜回忆题</small></button>
+      </div>
+      <div class="name-row">
+        <div class="name-box a">
+          <span class="tag a">💗 选手 A</span>
+          <input id="nameA" type="text" maxlength="8" placeholder="TA 的名字" autocomplete="off">
+          <div class="ph" id="phA">先答题的人</div>
+        </div>
+        <div class="name-box b">
+          <span class="tag b">💙 选手 B</span>
+          <input id="nameB" type="text" maxlength="8" placeholder="TA 的名字" autocomplete="off">
+          <div class="ph" id="phB">负责猜答案的人</div>
+        </div>
+      </div>
+
+      <ul class="rules" id="rulesList">
+        <li>共 <em id="ruleCount">10</em> 道甜蜜问题，两人<em>轮流作答</em></li>
+        <li>一个人回答，另一个人要猜<em>“TA 会怎么选？”</em></li>
+        <li>猜中加分，全部答完揭晓<em>默契度</em> 🎉</li>
+      </ul>
+
+      <button class="btn-primary" id="btnStart">开始考验 💕</button>
+      <button class="btn-ghost" id="btnCustom">✏️ 自定义题目 <span class="badge" id="customBadge">0</span></button>
+    </div>
+
+    <div class="stats-card" id="statsCard">
+      <div class="stat-cell"><div class="num" id="statPlays">0</div><div class="lbl">🎮 累计游玩</div><div class="sub" id="statPlaysSub">局</div></div>
+      <div class="stat-cell gold"><div class="num" id="statPerfect">0</div><div class="lbl">💯 满分</div><div class="sub" id="statPerfectSub">解锁彩蛋</div></div>
+      <div class="stat-cell"><div class="num" id="statBestTheme">—</div><div class="lbl">🏆 最佳主题</div><div class="sub" id="statBestSub">玩一局才知道</div></div>
+    </div>
+
+    <div class="ach-card" id="achCard">
+      <div class="ach-head">🏅 成就墙 <span class="ach-count" id="achCount">0/3</span></div>
+      <div class="ach-grid" id="achGrid"></div>
+    </div>
+
+    <footer>与「恋爱时光胶囊」配套的小礼物 🦄</footer>
+  </section>
+
+  <!-- ============ 答题页 ============ -->
+  <section id="screen-quiz" class="screen">
+    <div class="topbar">
+      <span class="round-chip" id="roundChip">第 1 / 10 题</span>
+      <span class="timer" id="timerChip">⏰ 20</span>
+      <div class="progress"><i id="progressBar"></i></div>
+      <button class="sound-toggle" id="soundToggle" aria-label="音效开关" title="音效开关">🔊</button>
+    </div>
+
+    <span class="turn-chip a" id="turnChip">💗 轮到 TA 作答</span>
+
+    <div class="q-card" id="qCard">
+      <div class="q-inner">
+        <img class="q-img hidden" id="qImg" alt="">
+        <div class="q-num" id="qNum">QUESTION</div>
+        <p class="q-text" id="qText">题目</p>
+      </div>
+    </div>
+
+    <div class="opt-list" id="optList"></div>
+
+    <!-- 对战模式：选中后出现下一题 -->
+    <button class="btn-primary btn-next hidden" id="btnBattleNext">下一题 ➜</button>
+
+    <!-- 对战模式：第一轮完成后的交接卡片 -->
+    <div class="handoff card hidden" id="handoffCard">
+      <div class="handoff-emoji">🤝</div>
+      <div class="handoff-title">第一轮完成！</div>
+      <p class="handoff-sub">请 <b id="handoffName">选手B</b> 作答，答完就能看到你们的默契差异～</p>
+      <button class="btn-primary" id="btnHandoffGo">开始第二轮 💪</button>
+    </div>
+
+    <!-- 猜测提示（选完答案后出现） -->
+    <div class="guess-tip hidden" id="guessTip">
+      <div class="big">🤔 TA 会怎么选？</div>
+      <div class="small" id="guessTipSub">请 <b>选手 B</b> 猜猜 TA 的答案</div>
+    </div>
+
+    <!-- 反馈卡片 -->
+    <div class="fb hidden" id="fbCard">
+      <div class="combo hidden" id="comboBadge">🔥 连击 ×2</div>
+      <span class="face" id="fbFace">💕</span>
+      <div class="t1" id="fbTitle">你们好有默契</div>
+      <p class="t2" id="fbSub">…</p>
+      <button class="btn-primary btn-next" id="btnNext">下一题 ➜</button>
+    </div>
+  </section>
+
+  <!-- ============ 结果页 ============ -->
+  <section id="screen-result" class="screen">
+    <div class="result-heart" id="resultHeart">🎉</div>
+    <div class="card" style="text-align:center">
+      <div class="pct-wrap">
+        <div class="pct-ring">
+          <svg viewBox="0 0 168 168">
+            <defs>
+              <linearGradient id="pctGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ff8fab"/>
+                <stop offset="55%" stop-color="#ff5c8a"/>
+                <stop offset="100%" stop-color="#6aa9ff"/>
+              </linearGradient>
+            </defs>
+            <circle class="track" cx="84" cy="84" r="75"></circle>
+            <circle class="bar" id="pctBar" cx="84" cy="84" r="75"></circle>
+          </svg>
+          <div class="pct-center">
+            <div class="pct-num" id="pctNum">0%</div>
+            <div class="pct-label" id="pctLabel">默契度</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="level-line">
+        <span class="level" id="levelName">天生一对</span>
+      </div>
+      <p class="level-desc" id="levelDesc">…</p>
+      <div class="best-line" id="bestLine">🏆 历史最佳默契：0%</div>
+      <div class="combo-line hidden" id="comboLine">🔥 最长连击：×0</div>
+      <div class="challenge-line hidden" id="challengeLine">⚡ 完成 0/20 题 · 用时 0:00</div>
+      <div class="hidden-comment locked" id="hiddenComment">🤫 神秘评语 · 拿到 100 分才能解锁</div>
+
+      <div class="history-card" id="historyCard">
+        <div class="history-title">📈 默契成长曲线</div>
+        <p class="history-sub" id="historySub">最近 10 局默契度走势</p>
+        <div id="historyChartWrap"></div>
+      </div>
+
+      <div class="cert-card" id="certCard">
+        <div class="cert-title">🏆 默契证书</div>
+        <p class="cert-sub">见证你们的默契时刻 · 可保存分享</p>
+        <canvas id="certCanvas" width="900" height="640"></canvas>
+        <button class="btn-blue" id="btnSaveCert">💾 保存证书图片</button>
+      </div>
+
+      <div class="share-card">
+        <div class="share-title">📤 把默契晒出去</div>
+        <div class="share-text" id="shareText">…</div>
+        <button class="btn-blue" id="btnCopyShare">📋 一键复制分享文案</button>
+      </div>
+
+      <div class="summary">
+        <div class="summary-title" id="summaryTitle">📋 逐题回顾</div>
+        <div id="summaryList"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="btnReplay">再来一次 🔄</button>
+        <button class="btn-ghost" id="btnHome">返回首页 🏠</button>
+      </div>
+    </div>
+    <footer>默契不是天生，是慢慢养成的 💞</footer>
+  </section>
+
+</main>
+
+<!-- ============ 成就解锁提示 ============ -->
+<div class="ach-toast hidden" id="achToast">
+  <span class="t-icon" id="toastIcon">🏅</span>
+  <div class="t-box">
+    <div class="t-title" id="toastTitle">成就解锁</div>
+    <div class="t-sub" id="toastSub">…</div>
+  </div>
+</div>
+
+<!-- ============ 满分彩蛋全屏覆盖 ============ -->
+<div class="perfect-overlay hidden" id="perfectOverlay">
+  <div class="perfect-box">
+    <div class="pf-emoji">💯</div>
+    <div class="pf-title">满分默契认证！</div>
+    <p class="pf-sub" id="perfectComment">…</p>
+    <button class="pf-btn" id="btnPerfectClose">收下这份彩蛋 ✨</button>
+  </div>
+</div>
+
+<!-- ============ 自定义题目弹窗 ============ -->
+<div class="modal-mask hidden" id="modalCustom">
+  <div class="modal-card card">
+    <h3 class="modal-title">✏️ 自定义题目</h3>
+    <p class="modal-sub">添加只属于你们的专属默契题，自动保存到本机，下次打开还在～</p>
+    <div class="custom-list" id="customList"></div>
+    <div class="custom-form">
+      <input id="cQ" type="text" maxlength="40" placeholder="题目，如：我们第一次牵手是在哪？" autocomplete="off">
+      <div class="c-opts">
+        <input id="cO1" type="text" maxlength="16" placeholder="选项 1" autocomplete="off">
+        <input id="cO2" type="text" maxlength="16" placeholder="选项 2" autocomplete="off">
+        <input id="cO3" type="text" maxlength="16" placeholder="选项 3（可留空）" autocomplete="off">
+        <input id="cO4" type="text" maxlength="16" placeholder="选项 4（可留空）" autocomplete="off">
+      </div>
+      <input id="cH" type="text" maxlength="30" placeholder="猜错提示（可留空）" autocomplete="off">
+      <textarea id="cImg" maxlength="200000" rows="2" placeholder="配图：粘贴图片链接（http…）或图片 base64（data:image…），可留空"></textarea>
+      <button class="btn-blue" id="btnAddCustom">➕ 添加这道题</button>
+    </div>
+    <button class="btn-ghost" id="btnCloseModal">完成，开始考验 💕</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * 情侣默契大考验 · 题库（可自由编辑）
+ * 每道题：q 题目 / opts 4 个选项 / hint 猜错时的俏皮提示
+ * 想换题、加题，直接改这个数组即可，游戏会自动适应题数。
+ * ============================================================ */
+const BUILTIN_QUESTIONS = [
+  { q: "第一次约会，我们去了哪里？", opts: ["电影院", "餐厅", "公园", "游乐园"], hint: "再想想那次心跳加速的地方～" },
+  { q: "TA 最爱吃的东西是什么？", opts: ["火锅", "甜品", "烧烤", "家常菜"], hint: "吃货的世界里藏着答案哦～" },
+  { q: "我们俩，是谁先表白的？", opts: ["是我", "是 TA", "朋友撮合", "顺其自然"], hint: "心动的那一刻还记得吗？" },
+  { q: "TA 最常说的一句口头禅是？", opts: ["随便", "好吧", "笑死我了", "没问题"], hint: "这句话 TA 一天要说八百遍～" },
+  { q: "吵架之后，通常谁先低头？", opts: ["我", "TA", "轮流低头", "当天就和好"], hint: "先低头不是认输，是更在乎～" },
+  { q: "TA 最害怕的东西是什么？", opts: ["虫子", "打雷", "鬼片", "和我分开"], hint: "怕怕的样子其实很可爱～" },
+  { q: "TA 生气时最明显的表现是？", opts: ["不说话", "一直讲道理", "刷手机不理人", "嘴上说“没事”"], hint: "嘴上说没事，心里可有事了～" },
+  { q: "我们俩，谁更黏人一点？", opts: ["我", "TA", "一样黏", "都不黏"], hint: "黏人是因为喜欢，谁也别说谁～" },
+  { q: "TA 睡前一定会做什么？", opts: ["刷手机", "看剧看书", "和我聊天", "倒头就睡"], hint: "睡前时光里藏着 TA 的小习惯～" },
+  { q: "如果我们去旅行，TA 最想去的城市是？", opts: ["海边城市", "山城重庆", "浪漫巴黎", "古镇小城"], hint: "下次旅行就带 TA 去那里吧～" },
+  { q: "第一次牵手，是在什么场景下？", opts: ["过马路时", "看电影时", "散步时", "拍照时"], hint: "指尖碰到的瞬间还记得吗～" },
+  { q: "TA 收到礼物时最常有的反应是？", opts: ["惊喜尖叫", "嘴上嫌弃心里开心", "马上拆开", "感动到说不出话"], hint: "TA 的小表情早就出卖了心情～" },
+  { q: "TA 的手机壁纸是什么风格？", opts: ["风景照", "动漫偶像", "我们的合照", "纯色简约"], hint: "偷偷瞄一眼 TA 的屏幕～" },
+  { q: "谁更擅长给对方制造惊喜？", opts: ["我", "TA", "平分秋色", "都是直球选手"], hint: "惊喜不惊喜不重要，心意最重要～" },
+  { q: "TA 心情不好的时候，最想要的是？", opts: ["抱抱", "安静待会儿", "听 TA 倾诉", "带 TA 吃好吃的"], hint: "下次 TA 不开心，记得投其所好～" },
+  { q: "我们俩，谁的笑点更低？", opts: ["我", "TA", "差不多", "都挺能忍"], hint: "笑点低的人，运气都不会太差～" },
+  { q: "TA 的梦想是什么？", opts: ["环游世界", "开一家小店", "和我不分开", "暴富躺平"], hint: "梦想还是要有的，万一实现了呢～" },
+  { q: "约会时 TA 最常说的一句话是？", opts: ["“你想吃什么”", "“拍张照吧”", "“好累啊”", "“听你的”"], hint: "这句话里藏着 TA 的温柔～" },
+  { q: "纪念日那天，TA 最想要的是？", opts: ["仪式感大餐", "收到用心礼物", "一起旅行", "在家腻一天"], hint: "直接问问 TA，答案可能和你想的不一样～" },
+  { q: "如果我们变成小动物，TA 会是什么？", opts: ["猫", "狗", "兔子", "仓鼠"], hint: "在 TA 眼里，自己是什么小可爱呢～" }
+];
+
+/* ============================================================
+ * 第二套题库：旅行愿望（10 题，可编辑）
+ * 在开始页点击「✈️ 旅行愿望」即可切换使用这套题。
+ * ============================================================ */
+const TRAVEL_QUESTIONS = [
+  { q: "如果可以一起去旅行，TA 最想去的国家是？", opts: ["日本", "泰国", "意大利", "冰岛"], hint: "把 TA 的梦想目的地记进小本本～" },
+  { q: "到了旅行地，TA 第一件事最想做什么？", opts: ["拍照打卡", "吃当地美食", "逛景点", "躺酒店休息"], hint: "TA 的旅行节奏，你懂吗～" },
+  { q: "海边度假时，TA 会先冲向哪里？", opts: ["沙滩大海", "海鲜大餐", "拍照点", "遮阳伞下"], hint: "海风、落日，还有身边的 TA～" },
+  { q: "TA 收拾行李的习惯是？", opts: ["提前两天收好", "出发前一晚", "当天早上", "全靠我收"], hint: "行李箱里装着 TA 的小性格～" },
+  { q: "旅途中 TA 最怕遇到什么？", opts: ["迷路", "航班延误", "行李丢失", "吃坏肚子"], hint: "下次出行，帮 TA 把担心都解决掉～" },
+  { q: "如果只能带一件东西旅行，TA 会带？", opts: ["手机", "相机", "零食", "充电宝"], hint: "选这个的人，心里一定有个答案～" },
+  { q: "TA 最爱买什么旅行纪念品？", opts: ["冰箱贴", "明信片", "当地特产", "文创小物"], hint: "TA 的旅行回忆都收藏在哪里呢～" },
+  { q: "TA 心中的蜜月圣地是哪里？", opts: ["马尔代夫", "圣托里尼", "京都", "稻城亚丁"], hint: "答案可能藏在你俩的聊天记录里～" },
+  { q: "长途车上，TA 最常做什么？", opts: ["睡觉", "唱歌", "看风景", "疯狂投喂我"], hint: "旅途中的 TA，是充电五分钟续航两小时～" },
+  { q: "如果明天就出发，TA 最想去哪玩？", opts: ["看极光", "潜水海岛", "雪山滑雪", "古镇老街"], hint: "明天就带 TA 出发，敢不敢～" }
+];
+
+/* ============================================================
+ * 第三套题库：日常默契（10 题，生活习惯/喜好类，可编辑）
+ * 在开始页点击「🌿 日常默契」即可切换使用这套题。
+ * ============================================================ */
+const DAILY_QUESTIONS = [
+  { q: "TA 早上起床后的第一件事是？", opts: ["刷手机", "喝杯温水", "赖床十分钟", "直接洗漱"], hint: "晨间习惯里藏着 TA 的作息～" },
+  { q: "周末的时候，TA 更想怎么过？", opts: ["宅家打游戏", "出门逛一逛", "睡到自然醒", "约朋友聚会"], hint: "周末的打开方式，就是 TA 的充电方式～" },
+  { q: "TA 最离不开的生活单品是？", opts: ["耳机", "保温杯", "手机", "眼镜"], hint: "出门前 TA 一定会摸一摸口袋的东西～" },
+  { q: "点奶茶时，TA 的固定口味是？", opts: ["三分糖去冰", "全糖加料", "无糖纯茶", "不喝奶茶"], hint: "奶茶三分甜，TA 的笑容十分甜～" },
+  { q: "熬夜的时候，TA 最常做什么？", opts: ["刷短视频", "打游戏", "追剧", "和我聊天"], hint: "深夜的 TA，都在和谁聊天呢～" },
+  { q: "TA 做家务时的状态是？", opts: ["边听歌边干", "速战速决", "能拖就拖", "分工合作"], hint: "家务分工，决定家庭和谐度～" },
+  { q: "TA 最喜欢的天气是？", opts: ["大晴天", "下雨天", "下雪天", "凉爽的阴天"], hint: "天气和心情，TA 自有偏爱～" },
+  { q: "吃饭时，TA 的口味偏好是？", opts: ["无辣不欢", "清淡养生", "甜口党", "酸口开胃"], hint: "抓住 TA 的胃，就抓住了 TA 的心～" },
+  { q: "TA 衣柜里最多的风格是？", opts: ["休闲舒适", "酷帅街头", "甜美可爱", "简约通勤"], hint: "打开 TA 的衣柜看看，答案一目了然～" },
+  { q: "TA 手机相册里最多的是什么？", opts: ["自拍", "美食", "风景", "我们的合照"], hint: "相册里藏着的，都是 TA 的心头好～" }
+];
+
+/* ============================================================
+ * 第四套题库：回忆时光（10 题，时光胶囊式甜蜜回忆，可编辑）
+ * 在开始页点击「📮 回忆时光」即可切换使用这套题。
+ * ============================================================ */
+const MEMORY_QUESTIONS = [
+  { q: "我们的纪念日，是哪一天？", opts: ["第一次见面那天", "确定关系那天", "第一次牵手那天", "情人节"], hint: "翻开日历，找找最特别的那天～" },
+  { q: "第一次约会，TA 穿了什么颜色的衣服？", opts: ["白色", "黑色", "粉色", "蓝色"], hint: "那天 TA 的样子，你还记得吗～" },
+  { q: "TA 第一次送我的礼物是什么？", opts: ["一束花", "手写卡片", "毛绒玩偶", "亲手做的甜品"], hint: "礼物的心意，比价格更珍贵～" },
+  { q: "我们一起拍的第一张合照，是在哪拍的？", opts: ["餐厅", "公园", "电影院门口", "学校/公司楼下"], hint: "相册的第一张，藏着故事的开始～" },
+  { q: "TA 说过最让我心动的一句话是？", opts: ["“有我在”", "“我想你了”", "“我们在一起吧”", "“嫁给我吧”"], hint: "那句话，现在想起来还会脸红吗～" },
+  { q: "第一次拥抱，是在哪里？", opts: ["车站/机场", "家门口", "公园长椅", "路灯下"], hint: "那个拥抱的温度，还记得吗～" },
+  { q: "我们最常一起去的地方是？", opts: ["奶茶店", "电影院", "公园", "TA 家"], hint: "老地方里，装着老故事～" },
+  { q: "TA 最珍藏的我们的回忆是什么？", opts: ["第一张合照", "电影票根", "聊天记录", "纪念日礼物"], hint: "TA 的宝箱里，藏着哪一段～" },
+  { q: "第一次说“我爱你”，是谁先开口的？", opts: ["我", "TA", "喝醉后说的", "还没说过"], hint: "三个字的魔法，谁先施放的～" },
+  { q: "如果能回到过去，TA 最想重来哪一天？", opts: ["第一次见面", "第一次约会", "第一次旅行", "告白那天"], hint: "如果有时光机，TA 想回到哪一天呢～" }
+];
+
+/* 自定义题目（localStorage，界面上可直接添加，无需改代码） */
+const CUSTOM_KEY = "coupleQuizCustom_v2";
+const THEME_KEY = "coupleQuizTheme";
+const MODE_KEY = "coupleQuizMode";
+let CUSTOM_QUESTIONS = [];
+let QUESTIONS = [];
+let currentTheme = "sweet";   // "sweet" | "travel"
+let currentMode = "coop";     // "coop" | "battle" | "challenge"
+const THEME_NAMES = { sweet: "甜蜜日常", travel: "旅行愿望", daily: "日常默契", memory: "回忆时光" };
+const THEME_QUESTIONS = { sweet: BUILTIN_QUESTIONS, travel: TRAVEL_QUESTIONS, daily: DAILY_QUESTIONS, memory: MEMORY_QUESTIONS };
+const CHALLENGE_MAX = 20;      // 挑战赛固定题数
+
+/* 历史最佳：按主题分别保存，key 为 coupleQuizBest_<主题> */
+const bestKeyFor = theme => "coupleQuizBest_" + theme;
+
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function loadCustom(){
+  try{
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    CUSTOM_QUESTIONS = Array.isArray(arr)
+      ? arr.filter(x => x && typeof x.q === "string" && Array.isArray(x.opts) && x.opts.length >= 2)
+      : [];
+  }catch(e){ CUSTOM_QUESTIONS = []; }
+}
+function saveCustom(){
+  try{ localStorage.setItem(CUSTOM_KEY, JSON.stringify(CUSTOM_QUESTIONS)); }catch(e){}
+}
+function syncQuestions(){
+  const base = THEME_QUESTIONS[currentTheme] || BUILTIN_QUESTIONS;
+  QUESTIONS = base.concat(CUSTOM_QUESTIONS);
+  const n = document.getElementById("ruleCount");
+  if(n) n.textContent = QUESTIONS.length;
+  updateBadge();
+}
+function setTheme(t){
+  currentTheme = t;
+  try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
+  const s = document.getElementById("themeSweet");
+  const v = document.getElementById("themeTravel");
+  const d = document.getElementById("themeDaily");
+  const m = document.getElementById("themeMemory");
+  if(s) s.classList.toggle("active", t === "sweet");
+  if(v) v.classList.toggle("active", t === "travel");
+  if(d) d.classList.toggle("active", t === "daily");
+  if(m) m.classList.toggle("active", t === "memory");
+  syncQuestions();
+}
+
+/* ============ 模式切换（默契考验 / 对战模式） ============ */
+function setMode(m){
+  currentMode = m;
+  state.mode = m;
+  try{ localStorage.setItem(MODE_KEY, m); }catch(e){}
+  const c = document.getElementById("modeCoop");
+  const b = document.getElementById("modeBattle");
+  const ch = document.getElementById("modeChallenge");
+  if(c) c.classList.toggle("active", m === "coop");
+  if(b) b.classList.toggle("active", m === "battle");
+  if(ch) ch.classList.toggle("active", m === "challenge");
+  const phA = document.getElementById("phA");
+  const phB = document.getElementById("phB");
+  if(m === "battle"){
+    if(phA) phA.textContent = "先作答";
+    if(phB) phB.textContent = "后作答，一起对答案";
+  } else {
+    if(phA) phA.textContent = "先答题的人";
+    if(phB) phB.textContent = "负责猜答案的人";
+  }
+  updateRules();
+}
+function updateRules(){
+  const ul = document.getElementById("rulesList");
+  if(!ul) return;
+  ul.classList.toggle("battle", state.mode === "battle");
+  if(state.mode === "battle"){
+    ul.innerHTML = `
+      <li>共 <em id="ruleCount">${QUESTIONS.length || 10}</em> 道题，双方<em>各自回答</em>同一套题</li>
+      <li>答完自动<em>对比答案</em>，看看默契差异</li>
+      <li>答案一致越多，默契度越高 🎉</li>`;
+  } else if(state.mode === "challenge"){
+    const n = Math.min(QUESTIONS.length || 20, CHALLENGE_MAX);
+    ul.innerHTML = `
+      <li>共 <em id="ruleCount">${n}</em> 道题，<em>3 分钟</em>限时连答</li>
+      <li>一人作答，一人猜，答完立即下一题</li>
+      <li>时间到自动结算，猜中越多默契越高 ⚡</li>`;
+  } else {
+    ul.innerHTML = `
+      <li>共 <em id="ruleCount">${QUESTIONS.length || 10}</em> 道甜蜜问题，两人<em>轮流作答</em></li>
+      <li>一个人回答，另一个人要猜<em>“TA 会怎么选？”</em></li>
+      <li>猜中加分，全部答完揭晓<em>默契度</em> 🎉</li>`;
+  }
+}
+function loadBest(theme){
+  const k = bestKeyFor(theme);
+  let v = parseInt(localStorage.getItem(k) || "0", 10);
+  if(isNaN(v)) v = 0;
+  // 兼容 v2/v3 旧版单一记录：仅迁移到甜蜜日常主题
+  if(v === 0 && theme === "sweet"){
+    const old = parseInt(localStorage.getItem("coupleQuizBest") || "0", 10);
+    if(!isNaN(old) && old > 0){ v = old; saveBest(theme, old); }
+  }
+  return v;
+}
+function saveBest(theme, pct){
+  try{ localStorage.setItem(bestKeyFor(theme), String(pct)); }catch(e){}
+}
+
+/* ============ 默契成长曲线（历史记录 + SVG 折线图） ============ */
+const HISTORY_KEY = "coupleQuizHistory_v1";
+const HISTORY_MAX = 20;        // 最多保存 20 局
+const HISTORY_SHOW = 10;       // 曲线最多展示 10 个点
+let historyEntries = [];
+function loadHistory(){
+  try{
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    historyEntries = Array.isArray(arr)
+      ? arr.filter(e => e && typeof e.pct === "number" && !isNaN(e.pct)).slice(-HISTORY_MAX)
+      : [];
+  }catch(e){ historyEntries = []; }
+}
+function saveHistory(){
+  try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(historyEntries.slice(-HISTORY_MAX))); }catch(e){}
+}
+function pushHistory(pct, mode, theme){
+  historyEntries.push({ t: Date.now(), pct: Math.max(0, Math.min(100, Math.round(pct))), mode: mode, theme: theme });
+  if(historyEntries.length > HISTORY_MAX) historyEntries = historyEntries.slice(-HISTORY_MAX);
+  saveHistory();
+}
+
+/* 渲染 SVG 折线：纵轴 0-100，横轴按局数分布，带数值与日期标签 */
+const SVG_NS = "http://www.w3.org/2000/svg";
+function renderHistoryChart(){
+  const wrap = document.getElementById("historyChartWrap");
+  if(!wrap) return;
+  wrap.innerHTML = "";
+  const entries = historyEntries.slice(-HISTORY_SHOW);
+  const sub = document.getElementById("historySub");
+  if(entries.length < 2){
+    if(sub) sub.textContent = "再玩几局，就能看到默契成长曲线啦～";
+    const empty = document.createElement("div");
+    empty.className = "history-empty";
+    empty.textContent = "💞 每一次游戏，都会在这里留下一颗星";
+    wrap.appendChild(empty);
+    return;
+  }
+  if(sub) sub.textContent = `最近 ${entries.length} 局 · 默契度走势`;
+
+  const W = 320, H = 132, padL = 24, padR = 32, padT = 20, padB = 20;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const n = entries.length;
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.setAttribute("class", "history-chart");
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.innerHTML = `<defs><linearGradient id="hGrad" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#ff8fab"/><stop offset="100%" stop-color="#6aa9ff"/>
+  </linearGradient></defs>`;
+
+  // 横向网格线（0 / 25 / 50 / 75 / 100）+ 刻度
+  [0, 25, 50, 75, 100].forEach(g => {
+    const y = padT + ih - (g / 100) * ih;
+    const ln = document.createElementNS(SVG_NS, "line");
+    ln.setAttribute("x1", padL); ln.setAttribute("x2", W - padR);
+    ln.setAttribute("y1", y); ln.setAttribute("y2", y);
+    ln.setAttribute("class", "h-grid");
+    svg.appendChild(ln);
+    const lb = document.createElementNS(SVG_NS, "text");
+    lb.setAttribute("x", 4); lb.setAttribute("y", y + 3);
+    lb.setAttribute("class", "h-label");
+    lb.textContent = g;
+    svg.appendChild(lb);
+  });
+
+  const x = i => padL + (n === 1 ? iw / 2 : i * iw / (n - 1));
+  const y = v => padT + ih - (v / 100) * ih;
+  const pts = entries.map((e, i) => [x(i), y(Math.max(0, Math.min(100, e.pct)))]);
+
+  // 折线
+  const line = document.createElementNS(SVG_NS, "polyline");
+  line.setAttribute("points", pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "));
+  line.setAttribute("class", "h-line");
+  svg.appendChild(line);
+
+  // 数据点 + 数值 + 日期
+  pts.forEach((p, i) => {
+    const dot = document.createElementNS(SVG_NS, "circle");
+    dot.setAttribute("cx", p[0].toFixed(1)); dot.setAttribute("cy", p[1].toFixed(1));
+    dot.setAttribute("r", 3.2); dot.setAttribute("class", "h-dot");
+    dot.setAttribute("fill", entries[i].mode === "battle" ? "#6aa9ff" : "#ff5c8a");
+    svg.appendChild(dot);
+
+    const val = document.createElementNS(SVG_NS, "text");
+    val.setAttribute("x", p[0].toFixed(1));
+    val.setAttribute("y", Math.max(12, p[1] - 7).toFixed(1));
+    val.setAttribute("class", "h-val");
+    val.textContent = entries[i].pct + "%";
+    svg.appendChild(val);
+
+    const d = new Date(entries[i].t);
+    const lb = document.createElementNS(SVG_NS, "text");
+    lb.setAttribute("x", p[0].toFixed(1)); lb.setAttribute("y", H - 6);
+    lb.setAttribute("class", "h-label");
+    lb.textContent = (d.getMonth() + 1) + "/" + d.getDate();
+    svg.appendChild(lb);
+  });
+
+  wrap.appendChild(svg);
+}
+
+/* ============ 游戏统计（累计游玩 / 满分彩蛋 / 最佳主题） ============ */
+const STATS_KEY = "coupleQuizStats_v1";
+const THEME_BEST_KEY = "coupleQuizThemeBest_v1";
+let stats = { plays: 0, perfect: 0, perfectUnlocked: false, bestTheme: "", bestPct: 0 };
+let themeBests = {};
+function loadStats(){
+  try{
+    const raw = localStorage.getItem(STATS_KEY);
+    const s = raw ? JSON.parse(raw) : null;
+    if(s && typeof s === "object"){
+      stats = {
+        plays: s.plays|0, perfect: s.perfect|0,
+        perfectUnlocked: !!s.perfectUnlocked,
+        bestTheme: typeof s.bestTheme === "string" ? s.bestTheme : "",
+        bestPct: s.bestPct|0
+      };
+    }
+    const tb = localStorage.getItem(THEME_BEST_KEY);
+    const parsed = tb ? JSON.parse(tb) : null;
+    themeBests = (parsed && typeof parsed === "object") ? parsed : {};
+    computeBestTheme();
+  }catch(e){}
+}
+function saveStats(){
+  try{
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    localStorage.setItem(THEME_BEST_KEY, JSON.stringify(themeBests));
+  }catch(e){}
+}
+function computeBestTheme(){
+  let best = "", bestPct = 0;
+  Object.keys(themeBests).forEach(k => {
+    const v = themeBests[k]|0;
+    if(v > bestPct){ bestPct = v; best = k; }
+  });
+  if(best){ stats.bestTheme = best; stats.bestPct = bestPct; }
+}
+function recordGame(pct, mode, theme){
+  stats.plays++;
+  if(pct === 100){ stats.perfect++; stats.perfectUnlocked = true; }
+  if(!themeBests[theme] || pct > (themeBests[theme]|0)) themeBests[theme] = pct;
+  computeBestTheme();
+  saveStats();
+  checkAchievements();   // 里程碑成就（10/50/100 局）
+}
+function themeDisplayName(k){ return THEME_NAMES[k] || k || "—"; }
+function renderStats(){
+  const p = $("statPlays"), pf = $("statPerfect"), bt = $("statBestTheme"),
+        ps = $("statPlaysSub"), pfs = $("statPerfectSub"), bs = $("statBestSub");
+  if(p) p.textContent = stats.plays;
+  if(ps) ps.textContent = stats.plays === 0 ? "局" : (stats.plays === 1 ? "1 局" : stats.plays + " 局");
+  if(pf) pf.textContent = stats.perfect;
+  if(pfs) pfs.textContent = stats.perfectUnlocked ? "已解锁彩蛋" : "解锁彩蛋";
+  if(bt) bt.textContent = stats.bestTheme ? themeDisplayName(stats.bestTheme) : "—";
+  if(bs) bs.textContent = stats.bestTheme ? "最佳 " + stats.bestPct + "%" : "玩一局才知道";
+}
+
+/* ============ 本地成就系统（累计游玩 10 / 50 / 100 局解锁徽章） ============ */
+const ACHIEVE_KEY = "coupleQuizAchievements_v1";
+const ACHIEVEMENTS = [
+  { id: "plays10",  icon: "🥉", name: "初露锋芒", n: 10,  desc: "累计游玩 10 局" },
+  { id: "plays50",  icon: "🥈", name: "默契老友", n: 50,  desc: "累计游玩 50 局" },
+  { id: "plays100", icon: "🥇", name: "神仙眷侣", n: 100, desc: "累计游玩 100 局" }
+];
+let unlockedAch = {};
+let achToastTimer = null;
+function loadAchievements(){
+  try{
+    const raw = localStorage.getItem(ACHIEVE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    unlockedAch = {};
+    (Array.isArray(arr) ? arr : []).forEach(id => { if(typeof id === "string") unlockedAch[id] = true; });
+  }catch(e){ unlockedAch = {}; }
+}
+function saveAchievements(){
+  try{ localStorage.setItem(ACHIEVE_KEY, JSON.stringify(Object.keys(unlockedAch))); }catch(e){}
+}
+function checkAchievements(){
+  const newly = [];
+  ACHIEVEMENTS.forEach(a => {
+    if(!unlockedAch[a.id] && stats.plays >= a.n){ unlockedAch[a.id] = true; newly.push(a); }
+  });
+  if(newly.length) saveAchievements();
+  newly.forEach(a => showAchievementToast(a));
+  renderAchievements();
+}
+function renderAchievements(){
+  const grid = $("achGrid"), cnt = $("achCount");
+  if(grid){
+    grid.innerHTML = ACHIEVEMENTS.map(a => {
+      const un = !!unlockedAch[a.id];
+      return `<div class="ach-item ${un ? "unlocked" : "locked"}">
+        <div class="ach-icon">${un ? a.icon : "🔒"}</div>
+        <div class="ach-name">${un ? a.name : "???"}</div>
+        <div class="ach-desc">${a.desc}</div>
+        <div class="ach-prog">${un ? "✓ 已解锁" : Math.min(stats.plays, a.n) + " / " + a.n + " 局"}</div>
+      </div>`;
+    }).join("");
+  }
+  if(cnt) cnt.textContent = Object.keys(unlockedAch).length + "/" + ACHIEVEMENTS.length;
+}
+function showAchievementToast(a){
+  const t = $("achToast");
+  if(!t) return;
+  const ic = $("toastIcon"), tt = $("toastTitle"), ts = $("toastSub");
+  if(ic) ic.textContent = a.icon;
+  if(tt) tt.textContent = "成就解锁：" + a.name;
+  if(ts) ts.textContent = a.desc + "，继续加油！";
+  t.classList.remove("hidden");
+  t.classList.remove("pop");
+  void t.offsetWidth;   // 重新触发滑入动画
+  t.classList.add("pop");
+  if(achToastTimer) clearTimeout(achToastTimer);
+  achToastTimer = setTimeout(() => t.classList.add("hidden"), 3800);
+}
+
+/* ============ 满分彩蛋（100 分惊喜动画 + 隐藏评语） ============ */
+const HIDDEN_COMMENTS = [
+  "你们不是天生一对，是宇宙亲手拼好的两块拼图 🧩✨",
+  "据说能拿 100 分的情侣，连下辈子的暗号都对好了 💘",
+  "隐藏评语解锁：你们的默契已经申请了专利 🏆",
+  "100 分不是满分，是你们爱情的下限 🥇",
+  "别告诉别人——你们偷偷读懂了彼此的心 🌟"
+];
+function showPerfectOverlay(){
+  const ov = $("perfectOverlay");
+  if(!ov) return;
+  const idx = Math.max(0, (stats.perfect - 1)) % HIDDEN_COMMENTS.length;
+  const c = $("perfectComment");
+  if(c) c.textContent = HIDDEN_COMMENTS[idx];
+  ov.classList.remove("hidden");
+}
+function hidePerfectOverlay(){
+  const ov = $("perfectOverlay");
+  if(ov) ov.classList.add("hidden");
+}
+function renderHiddenComment(){
+  const hc = $("hiddenComment");
+  if(!hc) return;
+  hc.classList.toggle("unlocked", stats.perfectUnlocked);
+  hc.classList.toggle("locked", !stats.perfectUnlocked);
+  hc.textContent = stats.perfectUnlocked
+    ? "🔓 隐藏评语已解锁：再拿 100 分，收集更多彩蛋评语！"
+    : "🤫 神秘评语 · 拿到 100 分才能解锁";
+}
+
+/* ============ 深色 / 浅色模式 ============ */
+const DARK_KEY = "coupleQuizDark";
+let darkOn = false;
+function setDark(on){
+  darkOn = on;
+  try{ localStorage.setItem(DARK_KEY, on ? "1" : "0"); }catch(e){}
+  document.documentElement.classList.toggle("dark", on);
+  const b = document.getElementById("darkToggle");
+  if(b) b.innerHTML = on ? "☀️ 浅色" : "🌙 深色";
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute("content", on ? "#241a2e" : "#ff6b9d");
+}
+
+/* 猜错时的俏皮提示语（随机挑一句） */
+const PLAYFUL_LINES = [
+  "诶？原来 TA 心里是这么想的～",
+  "有点小分歧，但这就是真实的彼此呀 💗",
+  "嘿嘿，多聊聊天就更懂 TA 啦～",
+  "没关系，爱情就是慢慢了解的过程～",
+  "猜错也甜，说明还有新大陆可以探索！"
+];
+
+/* 默契等级评定 */
+function levelOf(pct){
+  if(pct >= 90) return { name:"👑 天生一对", desc:"教科书级别的默契！你们上辈子一定就是一对，这辈子继续甜下去吧～" };
+  if(pct >= 70) return { name:"💞 心有灵犀", desc:"一个眼神就能懂对方！默契值爆表，继续加分哦～" };
+  if(pct >= 50) return { name:"🌱 渐入佳境", desc:"已经有小默契啦！再多约会几次，会更懂彼此～" };
+  if(pct >= 30) return { name:"⏳ 缘分加载中", desc:"偶尔对不上很正常，爱情就是一点点了解对方的过程～" };
+  return { name:"🍰 需要更多约会", desc:"别急，多约会、多聊天，默契一定会慢慢长出来的！" };
+}
+
+/* ============ 状态 ============ */
+const $ = id => document.getElementById(id);
+const state = {
+  nameA:"", nameB:"",
+  idx:0, score:0,
+  doneCount:0,             // 挑战赛：实际完成题数（超时补全前记录）
+  mode:"coop",              // "coop" | "battle"
+  battleRound:1,             // 对战模式：1=A 作答，2=B 作答
+  battleAnswers:[],          // 对战模式：A 的答案
+  battleAnswersB:[],         // 对战模式：B 的答案
+  phase:"answer",           // answer → guess → feedback（默契）；battle（对战）
+  pick:-1, guess:-1,
+  results:[],
+  combo:0, maxCombo:0       // 连击彩蛋：当前连击 / 最长连击（仅默契考验模式）
+};
+const other = p => (p === "A" ? "B" : "A");
+const nameOf = p => escapeHtml(p === "A" ? state.nameA : state.nameB);
+
+/* ============ 漂浮爱心背景 ============ */
+(function initHearts(){
+  const wrap = $("bgHearts");
+  const emojis = ["💗","💕","💖","💙","🩷","💜","🌸"];
+  for(let i=0;i<16;i++){
+    const s = document.createElement("span");
+    s.textContent = emojis[i % emojis.length];
+    s.style.left = (Math.random()*96) + "%";
+    s.style.fontSize = (14 + Math.random()*22) + "px";
+    s.style.animationDuration = (9 + Math.random()*10) + "s";
+    s.style.animationDelay = (-Math.random()*14) + "s";
+    wrap.appendChild(s);
+  }
+})();
+
+/* ============ 撒花（全屏） ============ */
+const cv = $("confetti"), ctx = cv.getContext("2d");
+let parts = [], rafId = null, confettiStart = 0, confettiDuration = 6000;
+const COLORS = ["#ff5c8a","#ff8fab","#6aa9ff","#8ec5ff","#ffb347","#ffd166","#c084fc"];
+function sizeCanvas(){
+  cv.width = innerWidth * devicePixelRatio;
+  cv.height = innerHeight * devicePixelRatio;
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+window.addEventListener("resize", sizeCanvas);
+sizeCanvas();
+
+function spawnConfetti(opts){
+  opts = opts || {};
+  sizeCanvas();
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  parts = [];
+  const gold = !!opts.gold;
+  const palette = gold ? ["#ffd700","#ffb347","#fff3b0","#ff8fab","#ff5c8a","#f59e0b","#ffffff"] : COLORS;
+  const N = Math.min(200, Math.max(90, Math.floor(innerWidth / 4)));
+  for(let i=0;i<N;i++){
+    parts.push({
+      x: Math.random()*innerWidth,
+      y: -24 - Math.random()*innerHeight*0.6,
+      w: 7 + Math.random()*10,
+      h: 7 + Math.random()*10,
+      vx: -1 + Math.random()*2,
+      vy: 2 + Math.random()*3.4,
+      rot: Math.random()*Math.PI*2,
+      vr: -0.16 + Math.random()*0.32,
+      color: palette[Math.floor(Math.random()*palette.length)],
+      heart: gold ? Math.random() < 0.4 : Math.random() < 0.28,
+      size: (gold ? 14 : 12) + Math.random()*12,
+      emoji: gold && Math.random() < 0.16 ? (Math.random() < 0.5 ? "💯" : "✨") : null
+    });
+  }
+  confettiStart = performance.now();
+  confettiDuration = gold ? 9000 : 6000;
+  if(rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(tickConfetti);
+}
+function tickConfetti(now){
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  for(const p of parts){
+    p.vy += 0.016; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+    if(p.y > innerHeight + 24){ p.y = -24; p.x = Math.random()*innerWidth; }
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.globalAlpha = 0.92;
+    ctx.fillStyle = p.color;
+    if(p.emoji){
+      ctx.font = p.size + "px serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(p.emoji, 0, 0);
+    } else if(p.heart){
+      ctx.font = p.size + "px serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("❤", 0, 0);
+    } else {
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+    }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+  if(now - confettiStart < confettiDuration){
+    rafId = requestAnimationFrame(tickConfetti);
+  } else {
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    rafId = null;
+  }
+}
+
+/* ============ 页面切换 ============ */
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+/* ============ 音效系统（Web Audio 合成短提示音，无需外部文件） ============ */
+const SOUND_KEY = "coupleQuizSound";
+let soundOn = true;
+let audioCtx = null;
+let lastWarnSecond = -1;
+try{ soundOn = localStorage.getItem(SOUND_KEY) !== "off"; }catch(e){}
+
+function syncSoundToggle(){
+  const b = document.getElementById("soundToggle");
+  if(!b) return;
+  b.textContent = soundOn ? "🔊" : "🔇";
+  b.classList.toggle("off", !soundOn);
+}
+function toggleSound(){
+  soundOn = !soundOn;
+  try{ localStorage.setItem(SOUND_KEY, soundOn ? "on" : "off"); }catch(e){}
+  if(soundOn){ ensureAudio(); playTone([[660,.08,0,.15,0],[880,.14,0,.15,.08]]); }
+  syncSoundToggle();
+}
+function ensureAudio(){
+  if(!soundOn) return null;
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }catch(e){ return null; }
+}
+function beep(freq, dur, type, vol, delay){
+  const ctx = ensureAudio();
+  if(!ctx) return;
+  try{
+    const t0 = ctx.currentTime + (delay || 0);
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(vol || .15, t0);
+    gain.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + .03);
+  }catch(e){}
+}
+function playTone(seq){
+  if(!soundOn) return;
+  seq.forEach(s => beep(s[0], s[1], s[2], s[3], s[4]));
+}
+/* 音效预设：点击 / 选中 / 猜中 / 猜错 / 超时 / 倒计时嘀嗒 / 交接 / 结果庆祝 / 柔和 */
+const SFX = {
+  click:   [[620,.06,"triangle",.12,0]],
+  pick:    [[760,.07,"triangle",.15,0]],
+  match:   [[523,.1,"sine",.16,0],[659,.1,"sine",.16,.09],[784,.18,"sine",.16,.18]],
+  miss:    [[330,.12,"triangle",.14,0],[247,.2,"triangle",.14,.1]],
+  timeout: [[220,.14,"square",.08,0],[160,.22,"square",.08,.12]],
+  tick:    [[880,.05,"square",.06,0]],
+  handoff: [[659,.12,"sine",.15,0],[880,.16,"sine",.15,.12]],
+  win:     [[523,.12,"sine",.16,0],[659,.12,"sine",.16,.1],[784,.12,"sine",.16,.2],[1047,.28,"sine",.17,.3]],
+  soft:    [[440,.1,"sine",.12,0],[587,.18,"sine",.12,.12]],
+  combo:   [[660,.08,"sine",.15,0],[880,.08,"sine",.15,.08],[1108,.16,"sine",.16,.16]],
+  perfect: [[523,.14,"sine",.16,0],[659,.14,"sine",.16,.13],[784,.14,"sine",.16,.26],[1047,.14,"sine",.16,.39],[1319,.5,"sine",.18,.52]]
+};
+
+/* ============ 答题倒计时（每题 20 秒，挑战赛用总倒计时） ============ */
+const TIMER_SECONDS = 20;
+let timerId = null, timerDeadline = 0;
+function startTimer(){
+  if(state.mode === "challenge"){ updateChallengeChip(); return; }   // 挑战赛：不按题计时
+  stopTimer();
+  lastWarnSecond = -1;
+  timerDeadline = performance.now() + TIMER_SECONDS * 1000;
+  updateTimerChip();
+  timerId = setInterval(tickTimer, 200);
+}
+function stopTimer(){
+  if(timerId){ clearInterval(timerId); timerId = null; }
+}
+function tickTimer(){
+  const remain = Math.max(0, timerDeadline - performance.now());
+  updateTimerChip();
+  if(remain <= 0) onTimeout();
+}
+function updateTimerChip(){
+  const chip = document.getElementById("timerChip");
+  if(!chip) return;
+  const left = Math.max(0, Math.ceil((timerDeadline - performance.now()) / 1000));
+  chip.textContent = "⏰ " + left;
+  const warn = left <= 5 && left > 0;
+  chip.classList.toggle("warn", warn);
+  // 最后 5 秒：每秒一声嘀嗒
+  if(warn && left !== lastWarnSecond){ lastWarnSecond = left; playTone(SFX.tick); }
+  if(!warn) lastWarnSecond = -1;
+}
+function onTimeout(){
+  if(state.mode === "challenge"){
+    // 挑战赛没有每题倒计时；保险兜底：随机作答继续连答
+    const rnd = Math.floor(Math.random() * QUESTIONS[state.idx].opts.length);
+    if(state.phase === "answer") enterGuessMode(rnd, true);
+    else if(state.phase === "guess") finishGuess(rnd, true);
+    return;
+  }
+  if(state.mode === "battle" && state.phase === "battle"){
+    // 对战模式：超时随机选一个，自动进入下一题
+    playTone(SFX.timeout);
+    onBattlePick(Math.floor(Math.random() * QUESTIONS[state.idx].opts.length));
+    battleNext();
+  } else if(state.phase === "answer"){
+    enterGuessMode(Math.floor(Math.random() * QUESTIONS[state.idx].opts.length), true);
+    startTimer();          // 猜题阶段重新计时 20 秒
+  } else if(state.phase === "guess"){
+    finishGuess(Math.floor(Math.random() * QUESTIONS[state.idx].opts.length), true);
+  }
+}
+
+/* ============ 挑战赛总倒计时（3 分钟限时连答） ============ */
+const CHALLENGE_SECONDS = 180;
+let challengeTimerId = null, challengeDeadline = 0, challengeLeft = CHALLENGE_SECONDS;
+function formatTime(sec){
+  sec = Math.max(0, Math.floor(sec));
+  return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+}
+function startChallengeTimer(){
+  stopChallengeTimer();
+  lastWarnSecond = -1;
+  challengeDeadline = performance.now() + CHALLENGE_SECONDS * 1000;
+  challengeLeft = CHALLENGE_SECONDS;
+  updateChallengeChip();
+  challengeTimerId = setInterval(tickChallengeTimer, 250);
+}
+function stopChallengeTimer(){
+  if(challengeTimerId){ clearInterval(challengeTimerId); challengeTimerId = null; }
+}
+function tickChallengeTimer(){
+  updateChallengeChip();
+  if(challengeDeadline - performance.now() <= 0) endChallenge();
+}
+function updateChallengeChip(){
+  const chip = document.getElementById("timerChip");
+  if(!chip) return;
+  const left = Math.max(0, Math.ceil((challengeDeadline - performance.now()) / 1000));
+  challengeLeft = left;
+  chip.textContent = "⏳ " + formatTime(left);
+  chip.classList.add("challenge");
+  const warn = left <= 30;
+  chip.classList.toggle("warn", warn);
+  // 最后 10 秒：每秒一声紧迫嘀嗒
+  if(warn && left <= 10 && left !== lastWarnSecond){ lastWarnSecond = left; playTone(SFX.tick); }
+  if(!warn) lastWarnSecond = -1;
+}
+function endChallenge(){
+  if(!challengeTimerId) return;   // 已结算过
+  stopChallengeTimer();
+  stopTimer();
+  state.doneCount = state.results.length;   // 实际完成题数
+  // 未答完的题补为「未作答」
+  while(state.results.length < QUESTIONS.length){
+    state.results.push({ pick: -1, guess: -1, ok: false, missed: true });
+  }
+  state.idx = QUESTIONS.length;
+  showResult();
+}
+
+/* ============ 开始游戏 ============ */
+function startGame(){
+  stopTimer();
+  stopChallengeTimer();
+  syncQuestions();
+  state.nameA = ($("nameA").value.trim() || "选手A");
+  state.nameB = ($("nameB").value.trim() || "选手B");
+  state.idx = 0; state.score = 0; state.results = [];
+  state.doneCount = 0;
+  state.combo = 0; state.maxCombo = 0;
+  if(state.mode === "battle"){
+    state.battleRound = 1;
+    state.battleAnswers = [];
+    state.battleAnswersB = [];
+  }
+  if(state.mode === "challenge"){
+    QUESTIONS = QUESTIONS.slice(0, CHALLENGE_MAX);   // 固定 20 题（题库不足则全用）
+    startChallengeTimer();
+  }
+  renderQuestion();
+  showScreen("screen-quiz");
+}
+
+function _renderQuestion(){
+  const isBattle = state.mode === "battle";
+  state.phase = isBattle ? "battle" : "answer";
+  state.pick = -1; state.guess = -1;
+  const q = QUESTIONS[state.idx];
+  const answerer = isBattle
+    ? (state.battleRound === 1 ? "A" : "B")
+    : (state.idx % 2 === 0 ? "A" : "B");
+
+  $("roundChip").textContent = isBattle
+    ? `第 ${state.idx+1} / ${QUESTIONS.length} 题 · ${state.battleRound === 1 ? "A 作答" : "B 作答"}`
+    : `第 ${state.idx+1} / ${QUESTIONS.length} 题`;
+  $("progressBar").style.width = (state.idx / QUESTIONS.length * 100) + "%";
+  $("qNum").textContent = "QUESTION " + (state.idx+1);
+  $("qText").textContent = q.q;
+
+  // v10：题目配图（可选，无图不显示；加载失败自动隐藏）
+  const qImg = $("qImg");
+  if(qImg){
+    if(q && typeof q.img === "string" && q.img.trim()){
+      qImg.src = q.img.trim();
+      qImg.onerror = () => { qImg.classList.add("hidden"); qImg.removeAttribute("src"); };
+      qImg.classList.remove("hidden");
+    } else {
+      qImg.removeAttribute("src");
+      qImg.onerror = null;
+      qImg.classList.add("hidden");
+    }
+  }
+
+  const chip = $("turnChip");
+  chip.classList.toggle("a", answerer === "A");
+  chip.classList.toggle("b", answerer === "B");
+  chip.innerHTML = (answerer === "A" ? "💗 " : "💙 ") + nameOf(answerer)
+    + (isBattle ? " 作答（选自己的答案）" : " 作答");
+
+  // 选项
+  const list = $("optList");
+  list.innerHTML = "";
+  const keys = ["A","B","C","D"];
+  q.opts.forEach((opt, i) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = `<span class="key">${keys[i]}</span><span class="txt"></span>`;
+    b.querySelector(".txt").textContent = opt;
+    b.addEventListener("click", () => isBattle ? onBattlePick(i) : onOptionClick(i));
+    list.appendChild(b);
+  });
+
+  $("guessTip").classList.add("hidden");
+  $("fbCard").classList.add("hidden");
+  $("btnBattleNext").classList.add("hidden");
+  $("handoffCard").classList.add("hidden");
+  $("qCard").classList.remove("hidden");
+  if(state.mode === "challenge"){
+    updateChallengeChip();
+  } else {
+    $("timerChip").textContent = "⏰ " + TIMER_SECONDS;
+    $("timerChip").classList.remove("warn");
+    startTimer();
+  }
+}
+
+/* 题目切换：卡片 3D 翻转（半程时更新内容，翻回显示新题） */
+let flipTimer = null;
+function renderQuestion(){
+  const card = $("qCard");
+  if(flipTimer) clearTimeout(flipTimer);
+  card.classList.add("flipping");
+  flipTimer = setTimeout(() => {
+    _renderQuestion();
+    card.classList.remove("flipping");
+    flipTimer = null;
+  }, 210);
+}
+
+/* 对战模式：选中一个选项 */
+function onBattlePick(i){
+  if(state.phase !== "battle") return;
+  state.pick = i;
+  playTone(SFX.pick);
+  [...$("optList").children].forEach((b, j) => b.classList.toggle("selected", j === i));
+  $("btnBattleNext").classList.remove("hidden");
+}
+
+/* 对战模式：进入下一题 */
+function battleNext(){
+  if(state.pick < 0){ shake($("optList")); return; }
+  stopTimer();
+  if(state.battleRound === 1){
+    state.battleAnswers.push(state.pick);
+    state.idx++;
+    if(state.idx < QUESTIONS.length){
+      renderQuestion();
+    } else {
+      state.battleRound = 2;
+      state.idx = 0;
+      showHandoff();
+    }
+  } else {
+    state.battleAnswersB.push(state.pick);
+    state.idx++;
+    if(state.idx < QUESTIONS.length){
+      renderQuestion();
+    } else {
+      showBattleResult();
+    }
+  }
+}
+
+/* 对战模式：第一轮结束，交接给 B */
+function showHandoff(){
+  playTone(SFX.handoff);
+  $("handoffName").textContent = state.nameB;
+  $("qCard").classList.add("hidden");
+  $("optList").classList.add("hidden");
+  $("btnBattleNext").classList.add("hidden");
+  $("guessTip").classList.add("hidden");
+  $("fbCard").classList.add("hidden");
+  $("handoffCard").classList.remove("hidden");
+  stopTimer();
+  $("timerChip").textContent = "⏰ " + TIMER_SECONDS;
+  $("timerChip").classList.remove("warn");
+}
+
+/* 选完答案 → 进入猜题模式 */
+function enterGuessMode(i, timedOut){
+  state.pick = i;
+  state.phase = "guess";
+  playTone(timedOut ? SFX.timeout : SFX.click);
+  const answerer = state.idx % 2 === 0 ? "A" : "B";
+  const guesser = other(answerer);
+  const list = $("optList");
+  [...list.children].forEach((b, j) => {
+    b.classList.toggle("selected", j === i);
+    b.classList.add("guess-mode");
+  });
+  const tip = $("guessTip");
+  tip.classList.remove("hidden");
+  $("guessTipSub").innerHTML =
+    (timedOut ? "⏰ 时间到，TA 随机选了一个！ " : "") +
+    `请 <b>${nameOf(guesser)}</b> 猜猜 ${nameOf(answerer)} 选了哪个？`;
+}
+
+/* 猜完 → 出反馈 */
+function finishGuess(i, timedOut){
+  state.guess = i;
+  state.phase = "feedback";
+  stopTimer();
+  const answerer = state.idx % 2 === 0 ? "A" : "B";
+  const guesser = other(answerer);
+  const q = QUESTIONS[state.idx];
+  const ok = state.pick === state.guess;
+  if(ok){ state.score++; state.combo++; if(state.combo > state.maxCombo) state.maxCombo = state.combo; }
+  else { state.combo = 0; }
+  state.results.push({ pick: state.pick, guess: state.guess, ok: ok });
+  playTone(ok ? (state.combo >= 2 ? SFX.combo : SFX.match) : SFX.miss);
+
+  [...$("optList").children].forEach((b, j) => {
+    b.classList.toggle("selected", j === state.guess);
+    b.style.pointerEvents = "none";
+  });
+
+  const fb = $("fbCard");
+  fb.classList.remove("hidden", "match", "miss");
+  if(ok){
+    fb.classList.add("match");
+    $("fbFace").textContent = "💕";
+    $("fbTitle").textContent = timedOut ? "时间到也猜中了！" : "你们好有默契！";
+    $("fbSub").innerHTML =
+      `${nameOf(guesser)} 猜中啦！<b>${nameOf(answerer)}</b> 选了「${escapeHtml(q.opts[state.pick])}」，一模一样～`;
+  } else {
+    fb.classList.add("miss");
+    $("fbFace").textContent = "😝";
+    $("fbTitle").textContent = "猜错啦，小调皮";
+    const line = PLAYFUL_LINES[Math.floor(Math.random()*PLAYFUL_LINES.length)];
+    $("fbSub").innerHTML =
+      (timedOut ? "⏰ 时间到！ " : "") +
+      `${nameOf(answerer)} 选了「<b>${escapeHtml(q.opts[state.pick])}</b>」，${nameOf(guesser)} 猜的是「${escapeHtml(q.opts[state.guess])}」<br>${escapeHtml(q.hint || "答案藏在你们的故事里～")} ${line}`;
+  }
+
+  // 连击彩蛋：连续答对 ≥2 时显示
+  const cb = $("comboBadge");
+  if(ok && state.combo >= 2){
+    cb.classList.remove("hidden");
+    cb.classList.toggle("big", state.combo >= 5);
+    cb.textContent = state.combo >= 5
+      ? `🔥🔥 ${state.combo} 连击！默契爆表！`
+      : `🔥 连击 ×${state.combo}`;
+    cb.classList.remove("pop");
+    void cb.offsetWidth;   // 重新触发弹跳动画
+    cb.classList.add("pop");
+  } else {
+    cb.classList.add("hidden");
+  }
+
+  $("btnNext").textContent = state.idx === QUESTIONS.length - 1 ? "查看默契结果 🎉" : "下一题 ➜";
+  fb.scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+function onOptionClick(i){
+  if(state.phase === "answer"){
+    enterGuessMode(i, false);
+  } else if(state.phase === "guess"){
+    finishGuess(i, false);
+  }
+}
+
+$("btnNext").addEventListener("click", () => {
+  state.idx++;
+  if(state.idx < QUESTIONS.length) renderQuestion();
+  else showResult();
+});
+
+/* ============ v10：默契证书（canvas 绘制，可保存 PNG） ============ */
+function certDateStr(){
+  const d = new Date();
+  return d.getFullYear() + " 年 " + (d.getMonth()+1) + " 月 " + d.getDate() + " 日";
+}
+function certHeart(ctx, x, y, s, color){
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y + s*0.35);
+  ctx.bezierCurveTo(x - s, y - s*0.35, x - s*0.6, y - s, x, y - s*0.45);
+  ctx.bezierCurveTo(x + s*0.6, y - s, x + s, y - s*0.35, x, y + s*0.35);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+function certRoundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function drawCertificate(pct, lv, nameA, nameB){
+  const canvas = document.getElementById("certCanvas");
+  if(!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  const FONT = "'PingFang SC','Microsoft YaHei',sans-serif";
+
+  // 背景
+  const bg = ctx.createLinearGradient ? ctx.createLinearGradient(0, 0, 0, H) : null;
+  if(bg){ bg.addColorStop(0, "#fff9ef"); bg.addColorStop(1, "#ffe9f1"); ctx.fillStyle = bg; }
+  else ctx.fillStyle = "#fff9ef";
+  ctx.fillRect(0, 0, W, H);
+
+  // 双线圆角边框
+  ctx.strokeStyle = "#e8b4c8"; ctx.lineWidth = 6;
+  certRoundRect(ctx, 26, 26, W-52, H-52, 22); ctx.stroke();
+  ctx.strokeStyle = "#f5c6d8"; ctx.lineWidth = 2;
+  certRoundRect(ctx, 44, 44, W-88, H-88, 16); ctx.stroke();
+
+  // 四角爱心
+  certHeart(ctx, 78, 78, 16, "#ffb3c8");
+  certHeart(ctx, W-78, 78, 16, "#ffb3c8");
+  certHeart(ctx, 78, H-78, 16, "#ffb3c8");
+  certHeart(ctx, W-78, H-78, 16, "#ffb3c8");
+
+  ctx.textAlign = "center";
+  // 标题
+  ctx.fillStyle = "#c2417c";
+  ctx.font = "bold 58px " + FONT;
+  ctx.fillText("默 契 证 书", W/2, 148);
+  ctx.fillStyle = "#b4682d";
+  ctx.font = "italic 21px Georgia,'Times New Roman',serif";
+  ctx.fillText("CERTIFICATE OF LOVE", W/2, 192);
+
+  // 分隔线 + 小爱心
+  ctx.strokeStyle = "#f0c8d6"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(W/2 - 150, 224); ctx.lineTo(W/2 + 150, 224); ctx.stroke();
+  certHeart(ctx, W/2, 224, 9, "#ff8fab");
+
+  // 名字
+  ctx.fillStyle = "#7a3b5e";
+  ctx.font = "bold 36px " + FONT;
+  ctx.fillText(nameA + "   ♥   " + nameB, W/2, 292);
+
+  // 默契度
+  ctx.fillStyle = "#e0507e";
+  ctx.font = "bold 68px " + FONT;
+  ctx.fillText(pct + "%", W/2, 384);
+  ctx.fillStyle = "#9d6b82";
+  ctx.font = "17px " + FONT;
+  ctx.fillText(state.mode === "battle" ? "答案一致率" : (state.mode === "challenge" ? "挑战默契度" : "默契度"), W/2, 416);
+
+  // 等级
+  ctx.fillStyle = "#b45309";
+  ctx.font = "bold 27px " + FONT;
+  ctx.fillText("等级 · " + (lv ? lv.name : ""), W/2, 476);
+
+  // 落款
+  ctx.fillStyle = "#8a5a6e";
+  ctx.font = "17px " + FONT;
+  ctx.fillText("见证人：你们彼此  ·  " + certDateStr(), W/2, 540);
+  ctx.fillStyle = "#c98a9f";
+  ctx.font = "15px " + FONT;
+  ctx.fillText("—— 默契不是天生，是慢慢养成的 ——", W/2, 590);
+}
+function saveCertificate(){
+  const canvas = document.getElementById("certCanvas");
+  if(!canvas || !canvas.toDataURL) return;
+  try{
+    const a = document.createElement("a");
+    a.download = "默契证书_" + new Date().toISOString().slice(0, 10) + ".png";
+    a.href = canvas.toDataURL("image/png");
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }catch(e){
+    try{ alert("保存失败，可长按证书截图保存～"); }catch(_e){}
+  }
+}
+
+/* ============ 结果页 ============ */
+function showResult(){
+  renderResultPage(false);
+}
+function showBattleResult(){
+  // 对比双方答案：一致即默契
+  const total = QUESTIONS.length;
+  state.results = [];
+  let match = 0;
+  for(let i = 0; i < total; i++){
+    const same = state.battleAnswers[i] === state.battleAnswersB[i];
+    if(same) match++;
+    state.results.push({ a: state.battleAnswers[i], b: state.battleAnswersB[i], ok: same });
+  }
+  state.score = match;
+  renderResultPage(true);
+}
+/* 得分滚动数字（easeOutCubic 计数动画） */
+function animateCountUp(el, target, duration){
+  duration = duration || 1200;
+  const start = performance.now();
+  function step(now){
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(eased * target) + "%";
+    if(t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function renderResultPage(isBattle){
+  stopTimer();
+  stopChallengeTimer();
+  const total = QUESTIONS.length;
+  const pct = Math.round(state.score / total * 100);
+  const lv = levelOf(pct);
+  const isChallenge = state.mode === "challenge";
+  playTone(pct === 100 ? SFX.perfect : (pct >= 70 ? SFX.win : SFX.soft));
+
+  // 环形进度 + 滚动数字
+  const bar = $("pctBar");
+  bar.style.transition = "none";
+  bar.style.strokeDashoffset = "472";
+  $("pctNum").textContent = "0%";
+  showScreen("screen-result");
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      bar.style.transition = "stroke-dashoffset 1.2s ease .3s";
+      bar.style.strokeDashoffset = (472 * (1 - pct/100)).toFixed(1);
+      animateCountUp($("pctNum"), pct, 1200);
+    });
+  });
+
+  $("resultHeart").textContent = pct === 100 ? "💯" : (isBattle ? "🤝" : (isChallenge ? "🏆" : "🎉"));
+  $("pctLabel").textContent = isBattle ? "答案一致率" : (isChallenge ? "挑战默契度" : "默契度");
+  $("levelName").textContent = lv.name;
+  $("levelDesc").textContent = lv.desc;
+
+  // v8：游戏统计 + 满分彩蛋 + 金色光环
+  recordGame(pct, state.mode, currentTheme);
+  renderStats();
+  renderHiddenComment();
+  const isPerfect = pct === 100;
+  if(isPerfect){
+    const pw = document.querySelector(".pct-wrap");
+    if(pw) pw.classList.add("glow");
+    showPerfectOverlay();
+  }
+
+  // 历史最佳：按主题分别保存
+  const prevBest = loadBest(currentTheme);
+  const isNewBest = pct > prevBest;
+  if(isNewBest) saveBest(currentTheme, pct);
+  const curBest = Math.max(prevBest, pct);
+  const tname = THEME_NAMES[currentTheme] || "当前主题";
+  $("bestLine").innerHTML = isNewBest
+    ? `🎉 新纪录！「${tname}」最佳默契：<b>${curBest}%</b>`
+    : `🏆 「${tname}」最佳默契：<b>${curBest}%</b>`;
+
+  // 连击彩蛋：最长连击（对战模式无连击概念，不展示）
+  const cl = $("comboLine");
+  if(!isBattle && state.maxCombo >= 2){
+    cl.classList.remove("hidden");
+    cl.innerHTML = `🔥 最长连击：<b>×${state.maxCombo}</b>` + (state.maxCombo >= 5 ? "，默契爆表！" : "");
+  } else {
+    cl.classList.add("hidden");
+  }
+
+  // 挑战赛完成度：已完成题数 + 总用时
+  const chLine = $("challengeLine");
+  if(chLine){
+    if(isChallenge){
+      chLine.classList.remove("hidden");
+      const done = state.doneCount || state.results.length;
+      const used = CHALLENGE_SECONDS - challengeLeft;
+      chLine.textContent = `⚡ 完成 ${done}/${total} 题 · 用时 ${formatTime(used)}`;
+    } else {
+      chLine.classList.add("hidden");
+    }
+  }
+
+  // 分享卡片文案
+  let shareTxt;
+  if(isChallenge){
+    const done = state.doneCount || state.results.length;
+    const used = CHALLENGE_SECONDS - challengeLeft;
+    shareTxt = buildChallengeShareText({ pct, lv, done, total, used: formatTime(used), nameA: state.nameA, nameB: state.nameB });
+  } else {
+    shareTxt = isBattle
+      ? buildBattleShareText({ pct, lv, match: state.score, total, nameA: state.nameA, nameB: state.nameB })
+      : buildShareText({ pct, lv, score: state.score, total, nameA: state.nameA, nameB: state.nameB });
+  }
+  $("shareText").textContent = shareTxt;
+
+  // v10：绘制默契证书
+  drawCertificate(pct, lv, state.nameA, state.nameB);
+
+  // 逐题回顾 / 默契差异对比
+  const list = $("summaryList");
+  list.innerHTML = "";
+  $("summaryTitle").textContent = isBattle ? "⚔️ 默契差异对比" : "📋 逐题回顾";
+  QUESTIONS.forEach((q, i) => {
+    const r = state.results[i];
+    const item = document.createElement("div");
+    item.className = "sum-item";
+    if(isBattle){
+      const detail = r.ok
+        ? `两人都选了「<b>${escapeHtml(q.opts[r.a])}</b>」`
+        : `<b>${nameOf("A")}</b> 选「${escapeHtml(q.opts[r.a])}」<br><b class="blue">${nameOf("B")}</b> 选「${escapeHtml(q.opts[r.b])}」`;
+      item.innerHTML = `
+        <span class="mark ${r.ok ? "ok" : "no"}">${r.ok ? "✅" : "❌"}</span>
+        <div>
+          <div class="sq">${i+1}. ${escapeHtml(q.q)}</div>
+          <div class="sa">${detail}</div>
+        </div>`;
+    } else {
+      const answerer = i % 2 === 0 ? "A" : "B";
+      const guesser = other(answerer);
+      const mark = r.ok ? "✅" : (r.missed ? "⏰" : "❌");
+      const saHtml = r.missed
+        ? `<div class="sa"><b>${nameOf(answerer)}</b> 时间到，这题未作答 ⏰</div>`
+        : `<div class="sa"><b class="${answerer==="A"?"":"blue"}">${nameOf(answerer)}</b> 选了「${escapeHtml(q.opts[r.pick])}」${r.ok ? "" : `，${nameOf(guesser)} 猜了「${escapeHtml(q.opts[r.guess])}」`}</div>`;
+      item.innerHTML = `
+        <span class="mark ${r.ok ? "ok" : "no"}">${mark}</span>
+        <div>
+          <div class="sq">${i+1}. ${escapeHtml(q.q)}</div>
+          ${saHtml}
+        </div>`;
+    }
+    list.appendChild(item);
+  });
+
+  // 历史曲线：记录本次成绩并渲染折线图
+  pushHistory(pct, state.mode, currentTheme);
+  renderHistoryChart();
+
+  spawnConfetti(isPerfect ? { gold: true } : undefined);
+}
+
+/* ============ 分享卡片文案 ============ */
+function buildShareText({ pct, lv, score, total, nameA, nameB }){
+  return [
+    "💘 情侣默契大考验",
+    `🧡 ${nameA} × ${nameB}`,
+    `🎯 默契度：${pct}%`,
+    `${lv.name}`,
+    `💡 共 ${total} 题，猜中 ${score} 题`,
+    "我们这么有默契，你们呢？快来挑战～"
+  ].join("\n");
+}
+function buildBattleShareText({ pct, lv, match, total, nameA, nameB }){
+  return [
+    "⚔️ 情侣默契大考验 · 对战模式",
+    `🧡 ${nameA} × ${nameB}`,
+    `🎯 答案一致率：${pct}%`,
+    `${lv.name}`,
+    `💡 共 ${total} 题，一致 ${match} 题`,
+    "我们把答案写在了一起，你们敢来对答案吗？"
+  ].join("\n");
+}
+function buildChallengeShareText({ pct, lv, done, total, used, nameA, nameB }){
+  return [
+    "⚡ 情侣默契大考验 · 挑战赛",
+    `🧡 ${nameA} × ${nameB}`,
+    `🎯 挑战默契度：${pct}%（完成 ${done}/${total} 题）`,
+    `${lv.name}`,
+    `⏱ 用时 ${used}`,
+    "3 分钟限时连答，你们敢来挑战吗？"
+  ].join("\n");
+}
+async function copyShare(){
+  const text = $("shareText").textContent;
+  const btn = $("btnCopyShare");
+  let ok = false;
+  try{
+    await navigator.clipboard.writeText(text);
+    ok = true;
+  }catch(e){
+    // 降级方案：隐藏 textarea + execCommand
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try{ ok = document.execCommand("copy"); }catch(e2){ ok = false; }
+    document.body.removeChild(ta);
+  }
+  btn.textContent = ok ? "✅ 已复制，快去分享！" : "❌ 复制失败，长按文字手动复制";
+  setTimeout(() => { btn.textContent = "📋 一键复制分享文案"; }, 2200);
+}
+
+/* ============ 重玩 / 返回 ============ */
+$("btnReplay").addEventListener("click", () => {
+  $("nameA").value = state.nameA;
+  $("nameB").value = state.nameB;
+  startGame();
+});
+$("btnHome").addEventListener("click", () => {
+  stopTimer();
+  stopChallengeTimer();
+  $("nameA").value = state.nameA;
+  $("nameB").value = state.nameB;
+  showScreen("screen-start");
+  renderStats();
+  renderAchievements();
+});
+$("btnStart").addEventListener("click", startGame);
+
+/* 满分彩蛋关闭 */
+$("btnPerfectClose").addEventListener("click", hidePerfectOverlay);
+$("perfectOverlay").addEventListener("click", e => {
+  if(e.target === $("perfectOverlay")) hidePerfectOverlay();
+});
+
+/* 对战模式：下一题 / 交接 */
+$("btnBattleNext").addEventListener("click", battleNext);
+$("btnHandoffGo").addEventListener("click", () => {
+  $("handoffCard").classList.add("hidden");
+  $("qCard").classList.remove("hidden");
+  $("optList").classList.remove("hidden");
+  renderQuestion();
+});
+
+/* 模式切换 */
+$("modeCoop").addEventListener("click", () => setMode("coop"));
+$("modeBattle").addEventListener("click", () => setMode("battle"));
+$("modeChallenge").addEventListener("click", () => setMode("challenge"));
+
+/* 主题切换 */
+$("themeSweet").addEventListener("click", () => setTheme("sweet"));
+$("themeTravel").addEventListener("click", () => setTheme("travel"));
+$("themeDaily").addEventListener("click", () => setTheme("daily"));
+$("themeMemory").addEventListener("click", () => setTheme("memory"));
+$("darkToggle").addEventListener("click", () => setDark(!darkOn));
+
+/* 分享文案一键复制 */
+$("btnCopyShare").addEventListener("click", copyShare);
+$("btnSaveCert").addEventListener("click", saveCertificate);
+
+/* 回车键快速开始 */
+document.addEventListener("keydown", e => {
+  if(e.key === "Enter" && $("screen-start").classList.contains("active") && $("modalCustom").classList.contains("hidden")){
+    startGame();
+  }
+});
+
+/* ============ 自定义题目管理 ============ */
+function updateBadge(){
+  const b = document.getElementById("customBadge");
+  if(b) b.textContent = CUSTOM_QUESTIONS.length;
+}
+function renderCustomList(){
+  const box = $("customList");
+  box.innerHTML = "";
+  if(!CUSTOM_QUESTIONS.length){
+    box.innerHTML = `<div class="c-empty">还没有自定义题目，添加第一道专属默契题吧～</div>`;
+  }
+  CUSTOM_QUESTIONS.forEach((cq, i) => {
+    const d = document.createElement("div");
+    d.className = "c-item";
+    const thumb = (cq && typeof cq.img === "string" && cq.img.trim())
+      ? `<img class="c-thumb" src="${escapeHtml(cq.img.trim())}" alt="" onerror="this.remove()">`
+      : "";
+    d.innerHTML = `
+      ${thumb}
+      <div class="c-q">Q${i+1}. ${escapeHtml(cq.q)}</div>
+      <div class="c-o">${cq.opts.map(escapeHtml).join(" · ")}</div>
+      <button class="c-del" aria-label="删除">🗑</button>`;
+    d.querySelector(".c-del").addEventListener("click", () => deleteCustomQuestion(i));
+    box.appendChild(d);
+  });
+}
+function clearCustomForm(){
+  ["cQ","cO1","cO2","cO3","cO4","cH","cImg"].forEach(id => { $(id).value = ""; });
+}
+function shake(el){
+  el.classList.remove("shake");
+  void el.offsetWidth;
+  el.classList.add("shake");
+  setTimeout(() => el.classList.remove("shake"), 350);
+}
+function addCustomQuestion(){
+  const q = $("cQ").value.trim();
+  const filled = ["cO1","cO2","cO3","cO4"].map(id => $(id).value.trim()).filter(s => s);
+  if(!q){ shake($("cQ")); return; }
+  if(filled.length < 2){ shake($("cO1")); return; }
+  const placeholders = ["其他", "保密选项", "都不对"];
+  const opts = filled.slice(0, 4);
+  let ph = 0;
+  while(opts.length < 4){
+    opts.push(ph < placeholders.length ? placeholders[ph] : "其他");
+    ph++;
+  }
+  const hint = $("cH").value.trim();
+  const img = $("cImg").value.trim();
+  CUSTOM_QUESTIONS.push({ q, opts, hint, img });
+  saveCustom();
+  syncQuestions();
+  clearCustomForm();
+  renderCustomList();
+}
+function deleteCustomQuestion(i){
+  CUSTOM_QUESTIONS.splice(i, 1);
+  saveCustom();
+  syncQuestions();
+  renderCustomList();
+}
+
+$("btnCustom").addEventListener("click", () => {
+  renderCustomList();
+  $("modalCustom").classList.remove("hidden");
+});
+$("btnCloseModal").addEventListener("click", () => $("modalCustom").classList.add("hidden"));
+$("btnAddCustom").addEventListener("click", addCustomQuestion);
+$("modalCustom").addEventListener("click", e => {
+  if(e.target === $("modalCustom")) $("modalCustom").classList.add("hidden");
+});
+["cQ","cO1","cO2","cO3","cO4","cH"].forEach(id => {
+  $(id).addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); addCustomQuestion(); }
+  });
+});
+
+/* 初始化：读自定义题库 + 主题 + 模式 + 历史最佳 + 默契曲线 */
+loadCustom();
+loadHistory();
+try{
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  if(savedTheme === "sweet" || savedTheme === "travel" || savedTheme === "daily" || savedTheme === "memory") currentTheme = savedTheme;
+}catch(e){}
+try{
+  const savedMode = localStorage.getItem(MODE_KEY);
+  if(savedMode === "coop" || savedMode === "battle" || savedMode === "challenge") currentMode = savedMode;
+}catch(e){}
+setTheme(currentTheme);
+setMode(currentMode);
+renderCustomList();
+loadStats();
+renderStats();
+renderHiddenComment();
+loadAchievements();
+renderAchievements();
+
+try{ darkOn = localStorage.getItem(DARK_KEY) === "1"; }catch(e){}
+setDark(darkOn);
+
+/* 音效开关 */
+const soundBtn = document.getElementById("soundToggle");
+if(soundBtn) soundBtn.addEventListener("click", toggleSound);
+syncSoundToggle();
+</script>
+</body>
+</html>
