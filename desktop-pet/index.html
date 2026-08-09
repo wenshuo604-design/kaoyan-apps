@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+<head>
+  <meta charset='UTF-8'>
+  <title>蜘蛛侠桌宠 · 网页版</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; }
+    /* 尺寸用百分比，随窗口大小档位等比缩放（标准档 340×445 → 精灵区 234×360） */
+    #pet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 68.75%; height: 80.95%; cursor: grab; }
+    #pet.dragging { cursor: grabbing; }
+
+    /* 看向鼠标：容器轻微旋转/偏移，动画在精灵上互不冲突 */
+    #look {
+      position: absolute; inset: 0;
+      transform-origin: 50% 90%;
+      transform: rotate(calc(var(--look-x, 0) * 7deg)) translate(calc(var(--look-x, 0) * -10px), calc(var(--look-y, 0) * 8px));
+      transition: transform 0.15s ease-out;
+      will-change: transform;
+    }
+
+    /* ===== 建模重做：质感与战衣细节 ===== */
+    #sprite, #gloss {
+      position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+      object-fit: contain; pointer-events: none;
+    }
+    #sprite {
+      transform-origin: 50% 90%;
+      /* 立体投影 + 白色描边光晕：深色壁纸下也清晰可辨 */
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.30)) drop-shadow(0 0 2px rgba(255,255,255,0.55));
+      /* 流畅度：提升到独立合成层，动画只走 transform/filter/opacity，不触发重排 */
+      will-change: transform, filter;
+      backface-visibility: hidden;
+    }
+    /* 战衣高光：用精灵图自身做遮罩，光泽只落在角色身上 */
+    #gloss {
+      background: linear-gradient(160deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.10) 42%, rgba(255,255,255,0) 58%);
+      -webkit-mask-image: var(--sprite-mask, none);
+      mask-image: var(--sprite-mask, none);
+      -webkit-mask-size: contain; mask-size: contain;
+      -webkit-mask-position: center; mask-position: center;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      mix-blend-mode: screen;
+      opacity: 0.5;
+      will-change: opacity;
+    }
+
+    /* 地面投影：椭圆软影，随动作同步缩放（跳起时缩小、打盹时摊开） */
+    #shadow {
+      position: absolute; bottom: 1%; left: 50%; width: 54%; height: 10%; margin-left: -27%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0) 72%);
+      transform-origin: center; will-change: transform, opacity;
+      pointer-events: none;
+    }
+    .action-idle  #shadow { animation: shadowIdle 3s ease-in-out infinite; }
+    .action-jump  #shadow { animation: shadowJump 1.2s ease-in-out infinite; }
+    .action-beg   #shadow { animation: shadowBeg 1s ease-in-out infinite; }
+    .action-sleep #shadow { animation: shadowSleep 2.5s ease-in-out infinite; }
+    .action-wave  #shadow { animation: shadowWave 1.2s ease-in-out infinite; }
+    @keyframes shadowIdle { 0%,100% { transform: scaleX(1); opacity: .85; } 50% { transform: scaleX(.9); opacity: .7; } }
+    @keyframes shadowJump {
+      0%,100% { transform: scaleX(1); opacity: .85; }
+      30%     { transform: scaleX(.5); opacity: .35; }
+      55%     { transform: scaleX(.58); opacity: .42; }
+      80%     { transform: scaleX(.88); opacity: .72; }
+    }
+    @keyframes shadowBeg { 0%,100% { transform: scaleX(1); opacity: .8; } 50% { transform: scaleX(.84); opacity: .62; } }
+    @keyframes shadowSleep { 0%,100% { transform: scaleX(1.06); opacity: .5; } 50% { transform: scaleX(1.18); opacity: .38; } }
+    @keyframes shadowWave { 0%,100% { transform: scaleX(1); opacity: .85; } 50% { transform: scaleX(.9); opacity: .68; } }
+
+    /* 蛛丝飘动：从窗口顶垂下的蛛丝 + 锚点，整体轻微摆动 */
+    #web {
+      position: absolute; top: 0; left: 50%; width: 2px; height: 24%; margin-left: -1px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.45) 55%, rgba(255,255,255,0) 100%);
+      transform-origin: 50% 0%;
+      box-shadow: 0 0 4px rgba(255,255,255,0.55);
+      animation: webSway 5s ease-in-out infinite alternate;
+      will-change: transform;
+      pointer-events: none;
+    }
+    #web::before {
+      content: ''; position: absolute; top: -2px; left: 50%; margin-left: -3px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff, #b9c2d4);
+      box-shadow: 0 0 5px rgba(255,255,255,0.9);
+    }
+    @keyframes webSway { 0% { transform: rotate(-2.5deg); } 100% { transform: rotate(2.5deg); } }
+
+    /* 打盹 Zzz 特效：只在 sleep 动作显示 */
+    #zzz {
+      position: absolute; top: 10%; right: 16%; width: 0; height: 0;
+      display: none; pointer-events: none;
+      font-weight: 900; color: rgba(255,255,255,0.95);
+      text-shadow: 0 0 8px rgba(90,130,255,0.95), 0 2px 4px rgba(0,0,0,0.35);
+    }
+    .action-sleep #zzz { display: block; }
+    #zzz span {
+      position: absolute; opacity: 0; font-size: clamp(14px, 4.5vh, 26px); line-height: 1;
+      animation: zzzFloat 2.6s ease-in-out infinite;
+      will-change: transform, opacity;
+    }
+    #zzz span:nth-child(1) { animation-delay: 0s; }
+    #zzz span:nth-child(2) { animation-delay: 0.9s; margin-left: 16px; font-size: clamp(17px, 5.5vh, 32px); }
+    #zzz span:nth-child(3) { animation-delay: 1.8s; margin-left: 34px; font-size: clamp(12px, 3.8vh, 22px); }
+    @keyframes zzzFloat {
+      0%   { opacity: 0; transform: translate(0, 8px) scale(0.7); }
+      25%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(16px, -30px) scale(1.3); }
+    }
+
+    /* ===== 五套动作动画（建模重做：加入挤压拉伸与位移细节） ===== */
+    /* 待机呼吸：起伏 + 呼吸光晕（filter 与 transform 互不冲突） */
+    @keyframes idle { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.03, 0.97) translateY(-6px); } }
+    @keyframes breathGlow {
+      0%, 100% { filter: drop-shadow(0 8px 12px rgba(0,0,0,0.30)) drop-shadow(0 0 2px rgba(255,255,255,0.55)); }
+      50%      { filter: drop-shadow(0 10px 16px rgba(0,0,0,0.40)) drop-shadow(0 0 6px rgba(255,255,255,0.9)); }
+    }
+    /* 开心蹦跳：起跳前蓄力下压 → 腾空拉长 → 落地缓冲 */
+    @keyframes jump {
+      0%, 100% { transform: translateY(0) scale(1, 1); }
+      25%      { transform: translateY(-10px) scale(1.03, 0.95); }
+      45%      { transform: translateY(-54px) scale(0.96, 1.06); }
+      62%      { transform: translateY(-48px) scale(1.05, 0.93); }
+      82%      { transform: translateY(-8px) scale(1.02, 0.97); }
+    }
+    /* 软萌撒娇：左右摇摆 + 微微抬升 */
+    @keyframes beg {
+      0%, 100% { transform: rotate(0deg) translateY(0) scale(1); }
+      20%      { transform: rotate(-10deg) translateY(-5px) scale(1.02, 0.98); }
+      45%      { transform: rotate(7deg) translateY(-6px) scale(1.03, 0.97); }
+      70%      { transform: rotate(-6deg) translateY(-4px) scale(1.01, 0.99); }
+      88%      { transform: rotate(8deg) translateY(-5px) scale(1.02, 0.98); }
+    }
+    /* 犯困打盹：缓缓下坠 + 轻微压扁 + 呼吸变暗 */
+    @keyframes sleep {
+      0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
+      50%      { transform: translateY(7px) scale(0.96, 0.93); opacity: 0.82; }
+    }
+    /* 挥手打招呼：左右甩动 + 小幅弹跳 */
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg) translateY(0); }
+      15%      { transform: rotate(-14deg) translateY(-3px); }
+      32%      { transform: rotate(14deg) translateY(-5px); }
+      48%      { transform: rotate(-10deg) translateY(-3px); }
+      64%      { transform: rotate(10deg) translateY(-4px); }
+      80%      { transform: rotate(-6deg) translateY(-2px); }
+      92%      { transform: rotate(6deg) translateY(-3px); }
+    }
+    /* 动画元素全部走合成层，避免 layout/paint 抖动 */
+    .action-idle  #sprite { animation: idle 3s ease-in-out infinite, breathGlow 3s ease-in-out infinite; }
+    .action-jump  #sprite { animation: jump 1.2s ease-in-out infinite; }
+    .action-beg   #sprite { animation: beg 1s ease-in-out infinite; }
+    .action-sleep #sprite { animation: sleep 2.5s ease-in-out infinite; }
+    .action-wave  #sprite { animation: wave 1.2s ease-in-out infinite; }
+
+    /* 蜘蛛侠风格台词气泡 */
+    #bubble {
+      position: fixed; bottom: 78%; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #e62429 0%, #c1121f 100%);
+      color: #fff; border: 2px solid #1c2b6b; border-radius: 14px;
+      padding: 8px 16px; font-size: 14px; font-weight: 600;
+      /* 自适应：允许换行，宽度随内容增长（最长 90% 窗口宽），不再截断 */
+      white-space: normal; line-height: 1.45; text-align: center;
+      max-width: 90%; overflow: visible;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+      opacity: 0; transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none; z-index: 10;
+      will-change: transform, opacity;
+    }
+    #bubble::after {
+      content: ''; position: absolute; left: 50%; bottom: -10px; margin-left: -8px;
+      border: 8px solid transparent; border-top-color: #c1121f; border-bottom: none;
+    }
+    #bubble.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+    /* 饱腹度条 */
+    #hunger {
+      position: fixed; bottom: 72.5%; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 12px; background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.35); border-radius: 7px;
+      overflow: hidden; z-index: 9;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    #hunger.show { opacity: 1; }
+    #hunger .fill {
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, #e62429, #ff9a3c);
+      border-radius: 7px;
+      /* 用 scaleX 代替 width 动画，只走合成层更流畅 */
+      transform-origin: left center;
+      transform: scaleX(var(--full, 0.6));
+      transition: transform 0.3s ease;
+      will-change: transform;
+    }
+    #hunger .pct {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    /* 食物 emoji 飘出 */
+    .food {
+      position: fixed; bottom: 71%; left: 50%;
+      font-size: clamp(22px, 8vh, 40px); line-height: 1;
+      pointer-events: none; z-index: 8;
+      animation: foodFloat 1.4s ease-out forwards;
+      will-change: transform, opacity;
+    }
+    @keyframes foodFloat {
+      0%   { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+      15%  { transform: translate(-50%, -28px) scale(1.15); opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--sway, 20px)), -130px) scale(1); opacity: 0; }
+    }
+
+    /* ===== 小功能：拖拽落地弹跳（释放时缓冲回弹） ===== */
+    @keyframes landing {
+      0%   { transform: translateY(0) scale(1, 1); }
+      30%  { transform: translateY(-12px) scale(1.03, 0.95); }
+      60%  { transform: translateY(0) scale(0.95, 1.06); }
+      82%  { transform: translateY(0) scale(1.03, 0.96); }
+      100% { transform: translateY(0) scale(1, 1); }
+    }
+    /* 优先级高于 .action-* #sprite，拖拽释放时短暂覆盖动作动画 */
+    #pet.landing #sprite { animation: landing 0.5s ease-out 1; }
+
+    /* ===== 小功能：喂食里程碑彩带特效 ===== */
+    .confetti {
+      position: fixed; bottom: 70%; left: 50%;
+      font-size: clamp(18px, 6vh, 34px); line-height: 1;
+      pointer-events: none; z-index: 8;
+      animation: confettiFly 1.6s ease-out forwards;
+      will-change: transform, opacity;
+    }
+    @keyframes confettiFly {
+      0%   { transform: translate(-50%, 0) scale(0.5) rotate(0deg); opacity: 0; }
+      20%  { opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--cx, 0px)), calc(-150px - var(--cy, 0px))) scale(1.15) rotate(var(--cr, 25deg)); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id='bubble'>嗨！我是蜘蛛侠 🕷️</div>
+  <div id='hunger'><div class='fill' id='hunger-fill'></div><div class='pct' id='hunger-pct'>60%</div></div>
+  <div id='pet' class='action-idle'>
+    <div id='web'></div>
+    <div id='shadow'></div>
+    <div id='zzz'><span>Z</span><span>Z</span><span>Z</span></div>
+    <div id='look'>
+      <div id='gloss'></div>
+      <img id='sprite' alt='蜘蛛侠'>
+    </div>
+  </div>
+  <script>
+    const actions = ['idle', 'jump', 'beg', 'sleep', 'wave'];
+    const labels = { idle: '待机呼吸', jump: '开心蹦跳', beg: '软萌撒娇', sleep: '犯困打盹', wave: '挥手打招呼' };
+    const petEl = document.getElementById('pet');
+    const lookEl = document.getElementById('look');
+    const bubble = document.getElementById('bubble');
+    const sprite = document.getElementById('sprite');
+
+    // ---------- 网页版 window.pet 兼容层 ----------
+    if (!window.pet) {
+      window.pet = {
+        getSprite: function () { return Promise.resolve(WEB_SPRITE); },
+        getWindowPosition: function () { return Promise.resolve([0, 0]); },
+        moveWindow: function () {},
+        setAction: function (a) {},
+        stopRandom: function () {},
+        showMenu: function () {},
+        onAction: function () {},
+        onSpeak: function () {}
+      };
+    }
+
+    const hungerEl = document.getElementById('hunger');
+    const hungerFill = document.getElementById('hunger-fill');
+    const hungerPct = document.getElementById('hunger-pct');
+
+    let currentAction = 'idle';
+
+    // ---------- 蜘蛛侠风格台词（12 条） ----------
+    const LINES = [
+      '能力越大，责任越大！🕷️',
+      '我是你们的友好邻居蜘蛛侠！',
+      '嗖——！危险来了，交给我！',
+      '相信你的蜘蛛感应！',
+      '嘿，别怕，有我在呢！',
+      '纽约的和平，由我来守护！',
+      '别担心，我会接住你的！',
+      '今天也是拯救世界的一天！',
+      '这一招……连我自己都没想到！',
+      '邪恶势力，休想得逞！🕸️',
+      '保持微笑，朋友！',
+      '该我登场了，网已就绪！'
+    ];
+    // 喂食台词（7 条）
+    const FOOD_LINES = [
+      '🍕 能量补充！',
+      '好吃！蜘蛛感应都变强了！',
+      '唔唔……谢谢你，朋友！🕷️',
+      '吃饱才有力气荡蛛丝！',
+      '这味道，和纽约披萨一样赞！',
+      '嗝～ 好满足！',
+      '再喂我要变身蜘蛛侠了！'
+    ];
+    const FOODS = ['🍕', '🍔', '🍩', '🍎', '🍗', '🍟', '🥤', '🍰', '🍦', '🍉', '🍜', '🥟'];
+    // 单击台词合并池：蜘蛛侠风格（12）+ 喂食（7）= 19 条，随机抽取
+    const ALL_LINES = LINES.concat(FOOD_LINES);
+
+    // ---------- 动态加载精灵图（同时给战衣高光层设置遮罩） ----------
+    // 网页版：直接加载精灵图（无 Electron IPC）
+    var WEB_SPRITE = 'sprites/2bcd793e1f7fea42cd51f7c53c1192cc.png';
+    sprite.src = WEB_SPRITE;
+    petEl.style.setProperty('--sprite-mask', "url('" + WEB_SPRITE + "')");
+
+    // ---------- 气泡 ----------
+    let bubbleTimer = null;
+    function say(text, ms) {
+      bubble.textContent = text;
+      bubble.classList.add('show');
+      clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(() => bubble.classList.remove('show'), ms || 3000);
+    }
+
+    function randomLine() {
+      return LINES[Math.floor(Math.random() * LINES.length)];
+    }
+
+    // ---------- 小功能：时段问候（按当前时间段生成问候台词） ----------
+    function greetingLine() {
+      const h = new Date().getHours();
+      if (h >= 5 && h < 9) return '早上好！新的一天，元气满满！☀️';
+      if (h >= 9 && h < 12) return '上午好！要不要一起拯救世界？🕷️';
+      if (h >= 12 && h < 14) return '中午好！该吃午饭啦，你也记得吃饭哦！';
+      if (h >= 14 && h < 18) return '下午好！喝口水歇一歇吧～';
+      if (h >= 18 && h < 23) return '晚上好！今天辛苦啦！🌙';
+      return '夜深了，该休息啦，晚安！💤';
+    }
+
+    function setAction(action, opts) {
+      const silent = !!(opts && opts.silent);
+      currentAction = action;
+      petEl.className = 'action-' + action;
+      if (!silent) {
+        bubble.textContent = labels[action] + '中...';
+        bubble.classList.add('show');
+        clearTimeout(bubbleTimer);
+        bubbleTimer = setTimeout(() => bubble.classList.remove('show'), 1200);
+      }
+    }
+
+    // ========== #2a 喂食：食物飘出 + 饱腹度 ==========
+    let fullness = 60;          // 初始饱腹度 0-100
+    let hungerTimer = null;
+    let lastHungerHint = 0;
+
+    function updateHungerBar(show) {
+      hungerFill.style.setProperty('--full', (fullness / 100).toFixed(3));
+      hungerPct.textContent = fullness + '%';
+      if (show) {
+        hungerEl.classList.add('show');
+        clearTimeout(hungerTimer);
+        hungerTimer = setTimeout(() => hungerEl.classList.remove('show'), 3000);
+      }
+    }
+
+    function spawnFood() {
+      const el = document.createElement('div');
+      el.className = 'food';
+      el.textContent = FOODS[Math.floor(Math.random() * FOODS.length)];
+      el.style.setProperty('--sway', (Math.random() * 80 - 40).toFixed(0) + 'px');
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1500);
+    }
+
+    // ---------- 小功能：喂食里程碑彩蛋（localStorage 持久化计数） ----------
+    let feedCount = 0;
+    try { feedCount = parseInt(localStorage.getItem('spiderpet.feedCount') || '0', 10) || 0; } catch (e) {}
+    function spawnConfetti() {
+      const emojis = ['🎉', '🎊', '✨', '⭐', '🕸️'];
+      for (let i = 0; i < 6; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        el.style.setProperty('--cx', (Math.random() * 160 - 80).toFixed(0) + 'px');
+        el.style.setProperty('--cy', (Math.random() * 60).toFixed(0) + 'px');
+        el.style.setProperty('--cr', (Math.random() * 120 - 60).toFixed(0) + 'deg');
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1700);
+      }
+    }
+
+    function feed() {
+      onInteract();
+      spawnFood();
+      if (fullness >= 100) {
+        say('吃饱啦！再吃要撑破战衣啦 😆', 2500);
+        return;
+      }
+      fullness = Math.min(100, fullness + 12);
+      updateHungerBar(true);
+      // 里程碑彩蛋：每喂满 10 顿喷彩带庆祝
+      feedCount += 1;
+      try { localStorage.setItem('spiderpet.feedCount', String(feedCount)); } catch (e) {}
+      if (feedCount % 10 === 0) {
+        spawnConfetti();
+        say('🎉 第 ' + feedCount + ' 顿啦！谢谢你一直陪我！', 3000);
+        return;
+      }
+      // 单击随机台词：25% 概率说时段问候，其余从 19 条合并池抽取
+      if (Math.random() < 0.25) {
+        say(greetingLine(), 2500);
+      } else {
+        say(ALL_LINES[Math.floor(Math.random() * ALL_LINES.length)], 2500);
+      }
+    }
+
+    // ========== #2b 长时间无操作自动打盹 ==========
+    let lastActivity = Date.now();
+    let autoSlept = false;
+    const IDLE_TIMEOUT = 60000; // 60 秒无交互触发
+
+    function onInteract() {
+      lastActivity = Date.now();
+      if (autoSlept && currentAction === 'sleep') {
+        autoSlept = false;
+        setAction('idle', { silent: true }); // 有交互立即醒来
+      }
+    }
+
+    setInterval(() => {
+      // 自动打盹
+      if (Date.now() - lastActivity > IDLE_TIMEOUT) {
+        if (currentAction === 'idle' && !autoSlept) {
+          autoSlept = true;
+          setAction('sleep', { silent: true });
+        }
+      }
+      // 饱腹度缓慢下降（每 5s -1，约 8 分钟从满到空）
+      if (fullness > 0) {
+        fullness = Math.max(0, fullness - 1);
+        updateHungerBar(false);
+        if (fullness <= 20 && Date.now() - lastHungerHint > 60000) {
+          lastHungerHint = Date.now();
+          say('有点饿了……能喂我一口吗？🕷️', 2500);
+        }
+      }
+    }, 5000);
+
+    // ========== #2c 看向鼠标 ==========
+    petEl.addEventListener('mousemove', (e) => {
+      onInteract();
+      const rect = petEl.getBoundingClientRect();
+      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;   // -1..1
+      const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+      lookEl.style.setProperty('--look-x', Math.max(-1, Math.min(1, nx)).toFixed(2));
+      lookEl.style.setProperty('--look-y', Math.max(-1, Math.min(1, ny)).toFixed(2));
+    });
+    petEl.addEventListener('mouseleave', () => {
+      lookEl.style.setProperty('--look-x', '0');
+      lookEl.style.setProperty('--look-y', '0');
+    });
+
+    // ---------- 鼠标拖拽移动（JS 实现，保留单击/右键事件） ----------
+    let drag = null;
+    let dragRaf = null;
+    let clickTimer = null;
+    const DRAG_THRESHOLD = 4;   // px，超过视为拖拽
+    const CLICK_TIME = 500;     // ms，单击判定时限
+    const CLICK_DELAY = 260;    // ms，单击喂食延迟，双击时取消
+
+    petEl.addEventListener('mousedown', async (e) => {
+      if (e.button !== 0) return; // 仅左键
+      onInteract();
+      e.preventDefault();
+      const [wx, wy] = await window.pet.getWindowPosition();
+      drag = {
+        startScreenX: e.screenX,
+        startScreenY: e.screenY,
+        winX: wx,
+        winY: wy,
+        moved: false,
+        t0: Date.now()
+      };
+      petEl.classList.add('dragging');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!drag) return;
+      onInteract();
+      const dx = e.screenX - drag.startScreenX;
+      const dy = e.screenY - drag.startScreenY;
+      if (!drag.moved && Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) {
+        drag.moved = true;
+      }
+      if (drag.moved) {
+        // requestAnimationFrame 节流，避免高频 IPC 移动窗口
+        drag.targetX = drag.winX + dx;
+        drag.targetY = drag.winY + dy;
+        if (dragRaf == null) {
+          dragRaf = requestAnimationFrame(() => {
+            dragRaf = null;
+            if (drag) window.pet.moveWindow(drag.targetX, drag.targetY);
+          });
+        }
+      }
+    });
+
+    document.addEventListener('mouseup', (e) => {
+      if (!drag) return;
+      const wasClick = !drag.moved && (Date.now() - drag.t0) < CLICK_TIME && e.button === 0;
+      if (dragRaf != null) {
+        cancelAnimationFrame(dragRaf);
+        dragRaf = null;
+        if (drag.moved && typeof drag.targetX === 'number') {
+          window.pet.moveWindow(drag.targetX, drag.targetY); // 补发最后位置
+        }
+      }
+      const dragMoved = !!drag.moved;
+      drag = null;
+      petEl.classList.remove('dragging');
+      if (dragMoved) {
+        // 小功能：拖拽释放落地弹跳（短暂覆盖动作动画）
+        petEl.classList.remove('landing');
+        void petEl.offsetWidth; // 强制 reflow 重启动画
+        petEl.classList.add('landing');
+        setTimeout(() => petEl.classList.remove('landing'), 550);
+      }
+      if (wasClick) {
+        // 延迟喂食：若随后是双击则取消，避免双击时又喂又切
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(feed, CLICK_DELAY);
+      }
+    });
+
+    // ---------- 双击切换动作（保留） ----------
+    let idx = 0;
+    petEl.addEventListener('dblclick', (e) => {
+      onInteract();
+      clearTimeout(clickTimer); // 取消单击待执行的喂食
+      idx = (idx + 1) % actions.length;
+      const a = actions[idx];
+      setAction(a);
+      if (window.pet) window.pet.setAction(a);
+      if (window.pet && window.pet.stopRandom) window.pet.stopRandom(); // 手动双击打断随机表演
+    });
+
+    // ---------- 右键菜单 ----------
+    petEl.addEventListener('contextmenu', (e) => {
+      onInteract();
+      e.preventDefault();
+      if (window.pet) window.pet.showMenu();
+    });
+
+    if (window.pet) {
+      window.pet.onAction((action) => {
+        onInteract();
+        setAction(action);
+      });
+    }
+
+    // ========== 小功能：随机自发小动作（空闲时偶尔蹦跳/挥手，更生动） ==========
+    setInterval(() => {
+      if (currentAction !== 'idle') return;
+      if (drag) return;                        // 拖拽中不打扰
+      if (Date.now() - lastActivity < 8000) return; // 刚互动过不打扰
+      const r = Math.random();
+      if (r < 0.45) {
+        setAction('jump', { silent: true });
+        setTimeout(() => { if (currentAction === 'jump') setAction('idle', { silent: true }); }, 1200);
+      } else if (r < 0.7) {
+        setAction('wave', { silent: true });
+        setTimeout(() => { if (currentAction === 'wave') setAction('idle', { silent: true }); }, 1200);
+      }
+    }, 20000);
+
+    // ========== 小功能：菜单报时（问候式 + 休息提醒） ==========
+    if (window.pet && window.pet.onSpeak) {
+      window.pet.onSpeak(() => {
+        const d = new Date();
+        const h = d.getHours();
+        const hh = String(h).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        const wd = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+        let greeting, rest;
+        if (h >= 5 && h < 9)       { greeting = '早上好！☀️'; rest = '记得吃早餐，元气满满哦～'; }
+        else if (h >= 9 && h < 12) { greeting = '上午好！';   rest = '坐久啦，起来活动一下～'; }
+        else if (h >= 12 && h < 14){ greeting = '中午好！';   rest = '午休时间，让眼睛歇一歇吧～'; }
+        else if (h >= 14 && h < 18){ greeting = '下午好！';   rest = '喝口水、伸个懒腰，休息一下吧～'; }
+        else if (h >= 18 && h < 23){ greeting = '晚上好！🌙'; rest = '今天辛苦啦，好好放松一下～'; }
+        else                       { greeting = '夜深了！💤'; rest = '该休息啦，别熬夜哦～'; }
+        say(greeting + ' 现在是 ' + hh + ':' + mm + '，周' + wd + '！' + rest, 4500);
+      });
+    }
+  </script>
+</body>
+</html>
