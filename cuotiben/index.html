@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#5b6cff">
 <meta name="description" content="考研错题本：错题录入、艾宾浩斯复习打卡、统计分析，数据本地保存">
+<meta name="application-name" content="考研错题本">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="错题本">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>考研错题本</title>
 <style>
 :root{
@@ -26,6 +34,7 @@
   --tabbar-bg:rgba(255,255,255,.94); --overlay-bg:rgba(20,22,40,.45);
   --toast-bg:rgba(24,26,42,.92); --toast-fg:#fff;
   --canvas-text:#1e2233; --canvas-sub:#9aa0b5;
+  color-scheme:light;
 }
 html.dark{
   --bg:#14161f; --card:#1d2030; --line:#2c3044;
@@ -41,9 +50,27 @@ html.dark{
   --tabbar-bg:rgba(29,32,48,.95); --overlay-bg:rgba(0,0,0,.55);
   --toast-bg:rgba(230,232,242,.95); --toast-fg:#1e2233;
   --canvas-text:#e6e8f2; --canvas-sub:#6d7390;
+  color-scheme:dark;
+}
+html.eye{
+  --bg:#dce9df; --card:#eef5ee; --line:#c3d6c6;
+  --pri:#3d8b5f; --pri2:#6bbf8a; --pri-soft:#e2f0e6;
+  --ok:#2e7d4f; --ok-soft:#d9ecdf;
+  --warn:#b26a1d; --warn-soft:#f7ead2;
+  --danger:#c0392b; --danger-soft:#f7e3df;
+  --text:#2c4034; --text2:#55705f; --text3:#7d9587;
+  --shadow:0 4px 16px rgba(45,90,70,.12);
+  --field-bg:#f3f8f4; --ghost:#e2ede4; --soft:#e6efe8;
+  --dsec-bg:#f0f7f1; --track:#d7e6da; --row-line:#e2ece3;
+  --chk-bg:#eaf2ec; --cause-soft:#e3f0e7; --cause-text:#3d8b5f;
+  --tabbar-bg:rgba(238,245,238,.94); --overlay-bg:rgba(30,50,38,.45);
+  --toast-bg:rgba(35,55,42,.92); --toast-fg:#f2f8f3;
+  --canvas-text:#2c4034; --canvas-sub:#7d9587;
+  color-scheme:light;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
+button,input,select,textarea,a,.tab,.link{touch-action:manipulation}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
 button{font-family:inherit;cursor:pointer}
@@ -89,16 +116,19 @@ main{max-width:640px;margin:0 auto;padding:14px 14px 100px}
 
 /* 错题卡片 */
 .qcard{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:13px;margin-bottom:12px;
-  transition:transform .18s ease,box-shadow .18s ease}
+  border-left:4px solid transparent;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
 .qcard-top{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
 .chip{display:inline-flex;align-items:center;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;line-height:1.5}
 .chip-subject{background:var(--pri-soft);color:var(--pri)}
+.fav-badge{display:inline-flex;align-items:center;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;line-height:1.5;background:rgba(245,158,11,.15);color:#f59e0b}
+.subj-dot{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none;vertical-align:-1px}
 .chip-mastered{background:var(--ok-soft);color:var(--ok)}
 .chip-unmastered{background:var(--soft);color:var(--text2)}
 .chip-due{background:var(--warn-soft);color:var(--warn)}
 .chip-overdue{background:var(--danger-soft);color:var(--danger)}
 .chip-cause{background:var(--cause-soft);color:var(--cause-text)}
-.qcard-stem{font-size:14.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;margin-bottom:8px}
+.qcard-stem{font-size:var(--stem-size,14.5px);line-height:1.55;white-space:pre-wrap;word-break:break-word;margin-bottom:8px}
 .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .qcard-meta{font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.6}
@@ -118,6 +148,18 @@ main{max-width:640px;margin:0 auto;padding:14px 14px 100px}
 .btn-danger{background:var(--danger-soft);color:var(--danger)}
 .btn-sm{padding:6px 11px;font-size:13px;border-radius:9px;flex:none}
 .btn:disabled{opacity:.45;cursor:not-allowed;filter:none;transform:none}
+
+/* v22 大数据量分页栏 */
+.pager{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 2px 2px;flex-wrap:wrap}
+.pager-info{font-size:12px;color:var(--text3);background:var(--soft);border-radius:999px;padding:6px 12px;font-weight:600;white-space:nowrap}
+.pager-info b{color:var(--pri)}
+.pager-btn{border:1px solid var(--line);background:var(--card);color:var(--text2);border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s ease}
+.pager-btn:hover:not(:disabled){border-color:var(--pri);color:var(--pri);background:var(--pri-soft)}
+.pager-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* v22 无障碍与动效细节 */
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* 表单 */
 .field{margin-bottom:12px}
@@ -169,6 +211,36 @@ canvas.donut{width:170px;height:170px}
 .heat-dot.on{background:var(--pri);color:#fff}
 .heat-dot.today{outline:2px solid var(--pri2);outline-offset:1px}
 .heat-cell span{font-size:10px;color:var(--text3)}
+.heat-dot.on{background:var(--pri);color:#fff}
+.heat-dot.l1{background:rgba(91,108,255,.28);color:var(--text2)}
+.heat-dot.l2{background:rgba(91,108,255,.62);color:#fff}
+.heat-dot.l3{background:#3f4fd6;color:#fff}
+.heat-legend{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:8px;font-size:11px;color:var(--text3)}
+.heat-legend .hl{width:12px;height:12px;border-radius:4px;display:inline-block}
+
+/* 自动精进#1：近 7 天复习量柱状图 */
+.week-bars{display:flex;align-items:flex-end;gap:8px;height:172px;padding:4px 4px 0;border-bottom:1px solid var(--line);margin-bottom:10px}
+.week-bar{flex:1;display:flex;flex-direction:column;align-items:center;height:100%}
+.week-bar .wb-track{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:128px;width:100%}
+.week-bar .wb-n{font-size:11px;font-weight:700;color:var(--text2);line-height:1;margin-bottom:4px}
+.week-bar .wb-col{width:58%;max-width:32px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--pri2),var(--pri));min-height:3px;transition:height .35s ease}
+.week-bar .wb-col.zero{background:var(--track)}
+.week-bar .wb-d{font-size:10px;color:var(--text3);margin-top:6px}
+.week-bar.today .wb-col{box-shadow:0 0 0 2px var(--pri2)}
+.week-bar.today .wb-d{color:var(--pri);font-weight:700}
+.fs-ctl{display:inline-flex;gap:4px;margin-left:8px}
+.heat-legend .l1{background:rgba(91,108,255,.28)}
+.heat-legend .l2{background:rgba(91,108,255,.62)}
+.heat-legend .l3{background:#3f4fd6}
+
+/* 批量导入 */
+.batch-pv{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+.batch-pv b{color:var(--text)}
+.batch-err{margin-top:6px;color:var(--danger);font-size:12px;line-height:1.7}
+.batch-list{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.batch-item{display:flex;gap:8px;align-items:baseline;background:var(--dsec-bg);border-radius:8px;padding:6px 10px;font-size:13px}
+.batch-item span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.batch-item i{font-style:normal;font-size:12px;color:var(--text3);flex:none}
 
 /* 设置 */
 .set-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--row-line)}
@@ -202,6 +274,7 @@ canvas.donut{width:170px;height:170px}
 .dsec{margin-bottom:14px}
 .dsec-title{font-size:12.5px;color:var(--text3);margin-bottom:5px;font-weight:700;letter-spacing:.5px}
 .dsec-body{font-size:14.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;background:var(--dsec-bg);border-radius:10px;padding:10px 12px}
+.stem-body{font-size:var(--stem-size,14.5px)}
 .dsec-body.plain{background:none;padding:0}
 .prog{display:flex;gap:5px;margin-top:8px}
 .prog i{flex:1;height:7px;border-radius:999px;background:var(--track)}
@@ -308,7 +381,7 @@ canvas.donut{width:170px;height:170px}
 .quiz-head h3{margin:0;font-size:16px}
 .quiz-prog{height:6px;border-radius:999px;background:var(--track);overflow:hidden;margin-bottom:14px}
 .quiz-prog i{display:block;height:100%;background:linear-gradient(90deg,#5b6cff,#8b5cf6);border-radius:999px;transition:width .25s}
-.quiz-q{font-size:15.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;margin-bottom:12px;font-weight:600}
+.quiz-q{font-size:var(--stem-size,15.5px);line-height:1.7;white-space:pre-wrap;word-break:break-word;margin-bottom:12px;font-weight:600}
 .quiz-reveal{margin-top:12px}
 .quiz-reveal .dsec{margin-bottom:10px}
 .quiz-actions{display:flex;gap:8px;margin-top:14px}
@@ -317,6 +390,18 @@ canvas.donut{width:170px;height:170px}
 .quiz-done .em{font-size:44px;display:block;margin-bottom:10px}
 .quiz-done h3{margin:0 0 6px;font-size:18px}
 .quiz-done p{color:var(--text2);font-size:14px;margin:0 0 16px}
+
+/* 自动精进#3：冲刺自测 */
+.sprint-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sprint-pos{font-size:13px;color:var(--text2);font-weight:700}
+.sprint-time{font-size:13px;color:var(--text2);background:var(--ghost);padding:4px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.sprint-time b{color:var(--pri);font-size:15px}
+.sprint-time.warn{background:rgba(239,68,68,.12);color:#ef4444}
+.sprint-time.warn b{color:#ef4444;animation:sprintBlink 1s infinite}
+@keyframes sprintBlink{0%,100%{opacity:1}50%{opacity:.4}}
+.sprint-adv{background:var(--ghost);border-radius:12px;padding:12px 14px;margin-top:4px;text-align:left}
+.sprint-adv b{display:block;margin-bottom:8px;font-size:13px}
+.sprint-adv-item{font-size:13px;color:var(--text2);line-height:1.7}
 
 /* ===== v6 界面润色：hover / 入场 / 过渡 / 滚动条 ===== */
 @media(hover:hover){
@@ -373,6 +458,65 @@ canvas.donut{width:170px;height:170px}
 .share-preview img{width:100%;max-width:430px;border-radius:16px;box-shadow:var(--shadow);
   border:1px solid var(--line);background:var(--dsec-bg)}
 .share-tip{text-align:center;font-size:12.5px;color:var(--text3);line-height:1.8;margin:10px 2px 4px}
+.search-hist{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}
+.search-hist .sh-label{font-size:11.5px;color:var(--text3);margin-right:2px;flex:none}
+.chip-search{background:var(--ghost);border:none;color:var(--text2);font-size:12px;padding:4px 10px;border-radius:999px;cursor:pointer;transition:background .15s;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip-search:hover{background:var(--pri-soft);color:var(--pri)}
+.sh-clear{margin-left:auto;font-size:11.5px;color:var(--text3);background:none;border:none;cursor:pointer;text-decoration:underline;flex:none;padding:2px}
+.qr-box{display:flex;justify-content:center;padding:8px 0 4px}
+.qr-box canvas{width:280px;height:280px;border-radius:12px;border:1px solid var(--line);background:#fff}
+.qr-video{display:flex;justify-content:center;padding:8px 0 4px}
+.qr-video video{width:100%;max-width:320px;border-radius:12px;background:#000;aspect-ratio:1;object-fit:cover}
+.share-actions{margin:8px 0 4px}
+.share-actions .btn{width:100%}
+.btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+
+/* v16-19: 科目切换器 / 标签 / 提醒横幅 / 错因趋势 / 数据大屏 */
+.subj-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.subj-tabs::-webkit-scrollbar{display:none}
+.subj-tab{flex:none;padding:7px 14px;border-radius:999px;background:var(--ghost);color:var(--text2);font-size:13px;font-weight:600;border:none;cursor:pointer;white-space:nowrap}
+.subj-tab.active{background:var(--grad);color:#fff;box-shadow:0 3px 8px rgba(91,108,255,.3)}
+.tag-chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:var(--pri-soft);color:var(--pri);margin:2px 4px 0 0}
+/* 自动精进#2：星级评分 */
+.star{display:inline-block;font-size:14px;line-height:1;color:var(--text3)}
+.star.on{color:var(--warn)}
+.star.pick{cursor:pointer;transition:transform .12s ease}
+.star.pick:hover{transform:scale(1.25)}
+.stars.picker{display:inline-flex;gap:2px;margin-left:2px}
+.star-pick{display:flex;gap:5px;padding:6px 2px}
+.star-pick .star{cursor:pointer;font-size:24px;color:var(--text3)}
+.star-pick .star.on{color:var(--warn)}
+.qcard-tags{margin-top:6px}
+.remind-banner{display:none;position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:70;background:var(--pri);color:#fff;padding:10px 18px;border-radius:12px;box-shadow:0 6px 18px rgba(91,108,255,.35);font-size:14px;font-weight:600;max-width:88vw;text-align:center}
+.remind-banner.show{display:block;animation:slideDown .35s ease}
+@keyframes slideDown{from{transform:translate(-50%,-16px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+.ctrend{display:flex;align-items:flex-end;gap:6px;height:126px;padding-top:6px}
+.ctrend-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.ctrend-stack{display:flex;flex-direction:column-reverse;width:100%;border-radius:6px 6px 0 0;overflow:hidden;height:96px;background:var(--track)}
+.ctrend-seg{width:100%;min-height:2px}
+.ctrend-label{font-size:10px;color:var(--text3);white-space:nowrap}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dash-card{background:var(--dsec-bg);border-radius:var(--radius);padding:14px}
+.dash-card h4{margin:0 0 8px;font-size:13px;color:var(--text2)}
+.dash-ring-wrap{display:flex;align-items:center;gap:14px}
+.dash-ring-wrap canvas{width:120px;height:120px}
+.dash-ring-num{font-size:30px;font-weight:800;color:var(--pri)}
+.dash-ring-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.dash-dots{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.dash-dot{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.dash-dot i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.dash-trend{height:110px;position:relative}
+.dash-trend .t-line,.dash-trend .t-label{position:absolute}
+.t-dot{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--pri);border:1.5px solid var(--card)}
+.dash-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--text3)}
+.dash-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px;vertical-align:-1px}
+@media(max-width:520px){.dash-grid{grid-template-columns:1fr}}
+.switch{position:relative;width:46px;height:26px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch i{position:absolute;inset:0;background:var(--track);border-radius:999px;transition:background .2s;cursor:pointer}
+.switch i:before{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.switch input:checked+i{background:var(--pri)}
+.switch input:checked+i:before{transform:translateX(20px)}
 /* 打印版 */
 #printArea{display:none}
 @media print{
@@ -403,6 +547,61 @@ canvas.donut{width:170px;height:170px}
 .flash-tip{font-size:12.5px;color:var(--text3);margin-top:10px;text-align:center}
 .flash-actions{display:flex;gap:8px;margin-top:14px}
 .flash-actions .btn{flex:1}
+/* 表单双列（题型 / 难度） */
+.row2{display:flex;gap:10px}
+.row2 select{flex:1;min-width:0}
+
+/* 智能复习计划（v12） */
+.countdown-card{display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--radius-lg);
+  background:linear-gradient(135deg,rgba(91,108,255,.12),rgba(139,92,246,.12));
+  border:1px solid rgba(91,108,255,.25);margin-bottom:12px}
+.countdown-card .cd-num{font-size:34px;font-weight:800;color:var(--pri);line-height:1;min-width:74px;text-align:center}
+.countdown-card .cd-body{flex:1;min-width:0}
+.countdown-card .cd-body b{font-size:15px;color:var(--text)}
+.countdown-card .cd-body p{margin:3px 0 0;font-size:12.5px;color:var(--text2);line-height:1.6}
+.countdown-card .cd-warn{color:var(--danger);font-weight:600}
+.chip-link{background:var(--pri-soft);color:var(--pri);font-size:11px;padding:2px 8px;border-radius:999px}
+.plan-hint{font-size:12px;color:var(--text3);line-height:1.7;margin-top:8px}
+
+/* 复习手册打印排版 */
+@media print{
+  .print-cover{text-align:center;padding:55mm 8mm 20mm;page-break-after:always}
+  .print-cover .logo{font-size:12px;letter-spacing:3px;color:#666;margin-bottom:26px}
+  .print-cover h1{font-size:30px;margin:0 0 8px;letter-spacing:1px;color:#000}
+  .print-cover .sub{font-size:13px;color:#555;margin-bottom:34px}
+  .print-cover .cv-stats{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+  .print-cover .cv-stat{border:1px solid #bbb;border-radius:10px;padding:10px 22px;min-width:86px}
+  .print-cover .cv-stat b{display:block;font-size:24px;color:#000}
+  .print-cover .cv-stat span{font-size:11px;color:#666}
+  .print-cover .cv-diff{margin-top:30px;font-size:12px;color:#555;line-height:2}
+  .print-toc{page-break-after:always}
+  .print-toc h2{font-size:16px;border-bottom:1px solid #333;padding-bottom:6px;color:#000}
+  .print-toc table{width:100%;border-collapse:collapse;font-size:12px}
+  .print-toc td{padding:6px 4px;border-bottom:1px dotted #bbb}
+  .print-toc td.n{text-align:right;color:#555}
+  .print-chapter{page-break-before:always}
+  .print-chapter .subj-title{font-size:18px;margin:0 0 4px;border-bottom:2px solid #333;padding-bottom:6px;color:#000}
+  .print-chapter .subj-desc{font-size:11px;color:#555;margin-bottom:12px}
+  .print-ch3{font-size:13px;color:#333;margin:14px 0 8px;padding-left:8px;border-left:3px solid #999}
+  .print-qnum{color:#555;font-size:11px;margin-bottom:4px}
+  .print-diff{display:inline-block;border-radius:999px;padding:1px 8px;font-size:10.5px;color:#fff}
+  .print-diff-易{background:#10b981}
+  .print-diff-中{background:#f59e0b}
+  .print-diff-难{background:#ef4444}
+  .print-foot{margin-top:20px;text-align:center;color:#888;font-size:10.5px}
+  .print-tbl{width:100%;border-collapse:collapse;margin:12px 0}
+  .print-tbl td{padding:6px 10px;border-bottom:1px solid #ccc;font-size:12.5px}
+  .print-tbl td.n{text-align:right;color:#444;font-weight:600}
+  /* 自动精进#7：封面姓名/日期 + 分章节排版 */
+  .print-cover .cv-fields{margin-top:38px;font-size:14px;color:#000}
+  .print-cover .cv-field{display:inline-block;margin:0 16px}
+  .print-cover .cv-field .cv-label{font-size:12px;color:#555}
+  .print-cover .cv-line{display:inline-block;min-width:92px;border-bottom:1px solid #000;padding:0 6px;font-weight:600;color:#000;text-align:center}
+  .print-toc tr.toc-ch td{color:#555;padding-left:24px;font-size:11.5px}
+  .print-card{page-break-inside:avoid}
+  .print-ch3{page-break-after:avoid}
+  .print-chapter .subj-title{page-break-after:avoid}
+}
 </style>
 </head>
 <body>
@@ -411,7 +610,7 @@ canvas.donut{width:170px;height:170px}
   <div class="topbar-inner">
     <div class="brand"><span class="logo">📕</span><div><h1>考研错题本</h1><p id="topDate"></p></div></div>
     <div class="top-actions">
-      <button id="themeBtn" class="theme-btn" onclick="toggleTheme()" aria-label="切换夜间模式">🌙</button>
+      <button id="themeBtn" class="theme-btn" onclick="toggleTheme()" aria-label="切换主题">☀️</button>
       <div class="streak-chip">🔥 <b id="streakNum">0</b> 天连续</div>
     </div>
   </div>
@@ -432,10 +631,23 @@ canvas.donut{width:170px;height:170px}
         <span class="advice-btn hide" id="advBtn"></span>
       </div>
     </div>
+    <div class="countdown-card" id="smartCard" style="display:none">
+      <div class="cd-num" id="cdNum">–</div>
+      <div class="cd-body">
+        <b id="cdTitle">距考试还有 X 天</b>
+        <p id="cdText">今日建议复习 N 道 · 按遗忘曲线 + 关联题联排</p>
+      </div>
+      <button class="btn btn-primary" style="flex:none" onclick="startSmart()">开始</button>
+    </div>
     <div class="mini-card">
       <span class="ic">🎲</span>
       <div class="mc-body"><b>随机抽测</b><p>从错题中随机抽 5 道，检验真实掌握情况</p></div>
       <button class="btn btn-primary" onclick="startQuiz()">开始</button>
+    </div>
+    <div class="mini-card">
+      <span class="ic">⏱️</span>
+      <div class="mc-body"><b>冲刺自测</b><p>随机抽 10 题限时作答，检验应试速度与正确率</p></div>
+      <button class="btn btn-ghost" onclick="startSprint()">开始</button>
     </div>
     <div class="mini-card">
       <span class="ic">🧠</span>
@@ -468,18 +680,42 @@ canvas.donut{width:170px;height:170px}
   <!-- 错题本 -->
   <section id="view-list" class="view">
     <div class="card">
+      <div class="subj-tabs" id="subjectTabs"></div>
       <div class="field"><input id="fKw" placeholder="🔍 搜索题干 / 错解 / 解析 / 备注…" oninput="onFilter()"></div>
+      <div class="search-hist hide" id="searchHist"></div>
       <div class="filter-row">
-        <select id="fSubject" onchange="onFilter()"></select>
         <select id="fCause" onchange="onFilter()"></select>
+        <select id="fTag" onchange="onFilter()"></select>
+        <select id="fFav" onchange="onFilter()">
+          <option value="">全部题目</option>
+          <option value="fav">📌 仅看收藏</option>
+        </select>
       </div>
       <div class="filter-row">
-        <input id="fChapter" placeholder="📚 章节 / 知识点筛选" oninput="onFilter()">
+        <select id="fSubject" onchange="onSubjectFilter()"></select>
+        <select id="fChapter" onchange="onFilter()"></select>
+      </div>
+      <div class="filter-row">
+        <select id="fStars" onchange="onFilter()">
+          <option value="">全部星级</option>
+          <option value="1">★ 1 星</option>
+          <option value="2">★★ 2 星</option>
+          <option value="3">★★★ 3 星</option>
+          <option value="4">★★★★ 4 星</option>
+          <option value="5">★★★★★ 5 星</option>
+        </select>
+        <select id="fSort" onchange="onFilter()">
+          <option value="">默认排序</option>
+          <option value="star-desc">星级：高 → 低</option>
+          <option value="star-asc">星级：低 → 高</option>
+        </select>
       </div>
       <div class="status-tabs" id="statusTabs"></div>
     </div>
     <div class="list-head"><h3>错题列表</h3><span class="badge" id="listCount">0</span>
-      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="printQuestions()">🖨️ 打印错题集</button></div>
+      <span class="fs-ctl"><button class="btn btn-ghost btn-sm" onclick="stemFont(-1)" title="减小题干字号">A−</button><button class="btn btn-ghost btn-sm" onclick="stemFont(1)" title="增大题干字号">A+</button></span>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="printQuestions()">🖨️ 打印错题集</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportHandbook()">📖 复习手册</button></div>
     <div id="questionList"></div>
   </section>
 
@@ -496,6 +732,22 @@ canvas.donut{width:170px;height:170px}
         </div>
       </div>
       <div class="field"><label>章节 / 知识点</label><input id="formChapter" placeholder="如：极限 / 溢流阀 / 阅读推理题" maxlength="50"></div>
+      <div class="field"><label>标签（逗号分隔，如：易错,重点）</label><input id="fTags" placeholder="自定义标签：易错 / 重点 / 必考 / 计算粗心…" maxlength="100"></div>
+      <div class="field">
+        <label>题型 / 难度</label>
+        <div class="row2">
+          <select id="formType">
+            <option>选择题</option><option>填空题</option><option>解答题</option><option>计算题</option><option>其他</option>
+          </select>
+          <select id="formDiff">
+            <option value="易">难度：易</option><option value="中" selected>难度：中</option><option value="难">难度：难</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>掌握度星级（1-5 星）</label>
+        <div class="star-pick" id="formStars"></div>
+      </div>
       <div class="field">
         <div class="field-head">
           <label>题干 <span class="req">*</span></label>
@@ -527,10 +779,60 @@ canvas.donut{width:170px;height:170px}
 
       <button class="btn btn-primary" style="width:100%;padding:12px" onclick="saveForm()">💾 保存错题</button>
     </div>
+
+    <div class="card">
+      <div class="form-head"><h2>📋 批量导入</h2></div>
+      <p class="plan-hint">每行一条，格式：<b>题干 | 答案 | 解析</b>（也可用 Tab 分隔，解析可留空；以 <b>#</b> 或 <b>//</b> 开头的行视为注释）。导入前按题干自动去重。</p>
+      <div class="field">
+        <label>科目 <span class="req">*</span></label>
+        <select id="batchSubject" onchange="onBatchSubjectChange()"></select>
+        <div id="batchNewSubjectWrap" class="hide" style="margin-top:8px">
+          <input id="batchNewSubject" placeholder="输入新科目名称" maxlength="20">
+        </div>
+      </div>
+      <div class="field"><label>章节 / 知识点（可选，统一应用到本批）</label><input id="batchChapter" maxlength="50"></div>
+      <div class="row2" style="margin-bottom:12px">
+        <select id="batchType">
+          <option>选择题</option><option>填空题</option><option>解答题</option><option>计算题</option><option>其他</option>
+        </select>
+        <select id="batchDiff">
+          <option value="易">难度：易</option><option value="中" selected>难度：中</option><option value="难">难度：难</option>
+        </select>
+      </div>
+      <textarea id="batchText" rows="6" placeholder="例：&#10;lim(x→0) (1-cosx)/x² = ? | 1/2 | 等价无穷小 1-cosx ~ x²/2&#10;先导式溢流阀的调压偏差？ | 更小 | 先导式调压偏差小、启闭特性好"></textarea>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-ghost" style="flex:1" onclick="previewBatch()">👀 预览</button>
+        <button class="btn btn-primary" style="flex:1" onclick="importBatch()">📥 批量导入</button>
+      </div>
+      <div id="batchPreview" class="hide" style="margin-top:10px"></div>
+    </div>
   </section>
 
   <!-- 统计 -->
   <section id="view-stats" class="view">
+    <div class="dash-grid">
+      <div class="dash-card">
+        <h4>🎯 掌握率总览</h4>
+        <div class="dash-ring-wrap">
+          <canvas id="dashRing" width="240" height="240"></canvas>
+          <div>
+            <div class="dash-ring-num" id="dashRate">0%</div>
+            <div class="dash-ring-sub" id="dashRateSub">共 0 题 · 已掌握 0 题</div>
+            <div class="dash-dots" id="dashDots"></div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <h4>📈 做题量趋势（近 8 周）</h4>
+        <div class="dash-trend" id="dashTrend"></div>
+        <div class="dash-legend" id="dashTrendLegend"></div>
+      </div>
+      <div class="dash-card" style="grid-column:1/-1">
+        <h4>🧩 错因分布总览</h4>
+        <div id="dashCauses"></div>
+        <div class="dash-legend" id="dashCauseLegend"></div>
+      </div>
+    </div>
     <div class="stat-row">
       <div class="stat"><b id="stTotal">0</b><span>错题总数</span></div>
       <div class="stat ok"><b id="stMastered">0</b><span>已掌握</span></div>
@@ -546,6 +848,23 @@ canvas.donut{width:170px;height:170px}
       <div id="causeBars"></div>
     </div>
     <div class="card">
+      <div class="card-head"><h3>📉 错因趋势（按月占比）</h3></div>
+      <div class="ctrend" id="causeTrend"></div>
+      <div class="dash-legend" id="causeTrendLegend"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>📊 难度分布</h3></div>
+      <div id="diffBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>🧾 题型分布</h3></div>
+      <div id="typeBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>⭐ 星级分布</h3></div>
+      <div id="starBars"></div>
+    </div>
+    <div class="card">
       <div class="card-head"><h3>📌 高频错因建议</h3></div>
       <div id="causeAdvice"></div>
     </div>
@@ -559,14 +878,47 @@ canvas.donut{width:170px;height:170px}
       <div class="trend-chart" id="trendChart"></div>
     </div>
     <div class="card">
+      <div class="card-head"><h3>📊 近 7 天复习量</h3></div>
+      <div id="weekBars"></div>
+    </div>
+    <div class="card">
       <div class="card-head"><h3>🔥 近 30 天复习热力图</h3></div>
       <div class="heat-grid" id="heat30"></div>
+      <div class="heat-legend"><span>少</span><i class="hl l1"></i><i class="hl l2"></i><i class="hl l3"></i><span>多</span></div>
       <p class="help" id="streakText" style="margin:10px 0 0"></p>
     </div>
   </section>
 
   <!-- 设置 -->
   <section id="view-settings" class="view">
+    <div class="card">
+      <div class="card-head"><h3>🎯 智能复习计划</h3></div>
+      <div class="field"><label>考试日期</label><input type="date" id="planExam"></div>
+      <div class="field"><label>每日复习题量上限</label><input type="number" id="planDaily" min="1" max="100" placeholder="如：10（每天最多安排这么多题）"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="savePlan()">💾 保存计划</button>
+      <p class="plan-hint" id="planHint"></p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>⏰ 复习提醒</h3></div>
+      <div class="set-row">
+        <span class="nm">每天固定时间提醒</span>
+        <label class="switch"><input type="checkbox" id="remindOn" onchange="saveReminder()"><i></i></label>
+      </div>
+      <div class="field" style="margin-top:10px"><label>提醒时间</label><input type="time" id="remindTime" value="20:00" onchange="saveReminder()"></div>
+      <p class="plan-hint" id="remindStatus" style="margin-top:8px"></p>
+      <p class="plan-hint">开启后，每天到点会在页面内弹出提醒横幅（需保持本页打开）；也可点击下方按钮立即测试。</p>
+      <button class="btn btn-ghost" style="width:100%;margin-top:6px" onclick="testReminder()">🔔 立即测试提醒</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>📖 复习手册封面</h3></div>
+      <div class="field"><label>姓名（打印在封面）</label><input id="hbName" placeholder="如：张三" maxlength="20"></div>
+      <div class="field" style="margin-top:10px"><label>日期（留空则打印当天）</label><input type="date" id="hbDate"></div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:6px" onclick="saveHandbook()">💾 保存封面信息</button>
+      <p class="plan-hint">导出复习手册时，封面会显示这里填写的姓名与日期；未填写则显示横线，可打印后手写。</p>
+    </div>
+      <button class="btn btn-primary" style="width:100%" onclick="savePlan()">💾 保存计划</button>
+      <p class="plan-hint">保存后，首页会按「未掌握题数 ÷ 剩余天数」自动估算今日应复习题量（不超过上限），并按遗忘曲线到期时间 + 关联题联排自动安排复习顺序。</p>
+    </div>
     <div class="card">
       <div class="card-head"><h3>🗂 科目管理</h3></div>
       <div id="subjList"></div>
@@ -587,11 +939,21 @@ canvas.donut{width:170px;height:170px}
       <div class="card-head"><h3>💾 数据备份</h3></div>
       <div class="data-btns">
         <button class="btn btn-primary" style="width:100%" onclick="exportData()">⬇️ 导出 JSON 备份</button>
+        <button class="btn btn-ghost" style="width:100%" onclick="exportQr()">🔳 导出二维码（扫码迁移）</button>
         <button class="btn btn-ghost" style="width:100%" onclick="document.getElementById('fileImport').click()">⬆️ 导入 JSON 备份</button>
+        <button class="btn btn-ghost" style="width:100%" onclick="scanQr()">📷 扫码导入（同设备迁移）</button>
         <button class="btn btn-ghost" style="width:100%" onclick="loadDemo()">🧪 载入示例错题（体验用）</button>
         <button class="btn btn-danger" style="width:100%" onclick="clearAll()">🗑 清空全部数据</button>
         <input type="file" id="fileImport" accept=".json,application/json" class="hide" onchange="importFile(this)">
       </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>📱 安装应用（PWA）</h3></div>
+      <div class="data-btns">
+        <button class="btn btn-primary hide" style="width:100%" id="installBtn" onclick="installPwa()">⬇️ 安装到主屏幕</button>
+        <button class="btn btn-ghost" style="width:100%" onclick="pwaInfo()">ℹ️ 离线使用说明</button>
+      </div>
+      <p class="plan-hint">浏览器支持时可在本页直接「安装到主屏幕」，获得独立窗口并支持离线打开；数据始终保存在本机 localStorage。若未出现安装按钮，请通过 http(s) 方式访问（如本地静态服务器或部署到托管平台）后刷新再试；直接以文件方式打开时本应用无任何外部依赖，本身即可离线使用。</p>
     </div>
     <div class="card">
       <div class="card-head"><h3>📖 使用说明</h3></div>
@@ -619,6 +981,9 @@ canvas.donut{width:170px;height:170px}
   <button class="tab" data-view="settings" onclick="switchView('settings')"><span>⚙️</span>设置</button>
 </nav>
 
+<!-- 复习提醒横幅 -->
+<div class="remind-banner" id="remindBanner" onclick="hideReminder()">⏰ 每日复习提醒 · 已到 <b id="remindTimeTag">20:00</b><br>今日待复习 <b id="remindDue">0</b> 道错题，去看看吧 ➜</div>
+
 <!-- 详情弹层 -->
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeDetail()">
   <div class="sheet" id="sheetBody"></div>
@@ -639,6 +1004,11 @@ canvas.donut{width:170px;height:170px}
   <div class="sheet" id="shareBody"></div>
 </div>
 
+<!-- 二维码弹层（导出 / 扫码导入） -->
+<div class="overlay" id="qrOverlay" onclick="if(event.target===this)closeQr()">
+  <div class="sheet" id="qrBody"></div>
+</div>
+
 <!-- 遗忘曲线复习弹层 -->
 <div class="overlay" id="sm2Overlay" onclick="if(event.target===this)closeSM2()">
   <div class="sheet" id="sm2Body"></div>
@@ -649,10 +1019,2319 @@ canvas.donut{width:170px;height:170px}
   <div class="sheet" id="flashBody"></div>
 </div>
 
+<!-- 冲刺自测弹层 -->
+<div class="overlay" id="sprintOverlay" onclick="if(event.target===this)closeSprint()">
+  <div class="sheet" id="sprintBody"></div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 'use strict';
+
+/* ===== QR Code Generator (MIT License) =====
+ * Copyright (c) 2009 Kazuhiko Arase, https://www.d-project.com/
+ * Embedded locally so the app keeps working offline (no CDN).
+ * ========================================================== */
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
+/* ===== 错题本 v20：二维码导出/导入 + 搜索历史 ===== */
 /* ============ 数据层 ============ */
 var LS_KEY='kaoyan_cuotiben_v2';
 var LS_KEY_OLD='kaoyan_cuotiben_v1';
@@ -683,12 +3362,24 @@ function load(){
         s.subjects=(s.subjects&&s.subjects.length)?s.subjects:DEF_SUBJECTS.slice();
         s.causes=(s.causes&&s.causes.length)?s.causes:DEF_CAUSES.slice();
         s.checkins=s.checkins||[];
+        s.plan=s.plan||{examDate:'',daily:10};
+        s.plan.daily=(s.plan.daily>0)?Math.min(100,s.plan.daily):10;
+        s.remind=s.remind||{on:false,time:'20:00',last:''};
+        s.searchHistory=Array.isArray(s.searchHistory)?s.searchHistory.slice(0,8):[];
+        s.fontSize=(s.fontSize>=12&&s.fontSize<=20)?s.fontSize:14.5;
+        s.subjectColors=(s.subjectColors&&typeof s.subjectColors==='object')?s.subjectColors:{};
+        s.handbook=(s.handbook&&typeof s.handbook==='object')?s.handbook:{name:'',date:''};
         s.questions.forEach(function(q){
           if(!Array.isArray(q.causes))q.causes=[];
           if(!Array.isArray(q.reviews))q.reviews=[];
+          if(!Array.isArray(q.tags))q.tags=[];
           q.mastered=!!q.mastered;
+          q.fav=!!q.fav;
           q.img=q.img?String(q.img):'';
+          if(!q.diff||['易','中','难'].indexOf(q.diff)<0)q.diff='中';
+          if(!q.qtype)q.qtype='其他';
           if(!q.sm2||typeof q.sm2.ef!=='number')q.sm2={ef:2.5,interval:0,reps:0,next:null,lastGrade:null};
+          if(!q.stars||q.stars<1||q.stars>5)q.stars=3;
         });
         if(migrated){
           try{localStorage.setItem(LS_KEY,JSON.stringify(s));localStorage.removeItem(LS_KEY_OLD);}catch(e){}
@@ -697,7 +3388,7 @@ function load(){
       }
     }catch(e){}
   }
-  return {subjects:DEF_SUBJECTS.slice(),causes:DEF_CAUSES.slice(),questions:[],checkins:[]};
+  return {subjects:DEF_SUBJECTS.slice(),causes:DEF_CAUSES.slice(),questions:[],checkins:[],plan:{examDate:'',daily:10},remind:{on:false,time:'20:00',last:''},searchHistory:[],fontSize:14.5,subjectColors:{},handbook:{name:'',date:''}};
 }
 function save(){localStorage.setItem(LS_KEY,JSON.stringify(state));}
 
@@ -714,6 +3405,48 @@ function nextDue(q){
   return ds[0]||null;
 }
 function doneCount(q){return (q.reviews||[]).filter(function(r){return r.done;}).length;}
+
+/* ============ 自动精进#2：星级评分 ============ */
+function starHtml(n){
+  n=Math.max(1,Math.min(5,n||3));
+  var s='';
+  for(var i=1;i<=5;i++)s+='<span class="star'+(i<=n?' on':'')+'">'+(i<=n?'★':'☆')+'</span>';
+  return '<span class="stars" title="'+n+' 星">'+s+'</span>';
+}
+function starPickerHtml(id,n){
+  n=Math.max(1,Math.min(5,n||3));
+  var s='';
+  for(var i=1;i<=5;i++)s+='<span class="star pick'+(i<=n?' on':'')+'" onclick="setStars(\''+id+'\','+i+')">'+(i<=n?'★':'☆')+'</span>';
+  return '<span class="stars picker">'+s+'</span>';
+}
+function setStars(id,n){
+  if(n<1||n>5)return;
+  var q=state.questions.filter(function(x){return x.id===id;})[0];
+  if(!q)return;
+  q.stars=n;
+  save();
+  openDetail(id);
+  toast('已设为 '+n+' 星 ⭐');
+}
+var formStarsVal=3;
+function setFormStars(n){
+  formStarsVal=n;
+  renderStarPick(n);
+}
+function renderStarPick(n){
+  var box=$('formStars');
+  if(!box)return;
+  box.innerHTML='';
+  for(var i=1;i<=5;i++){
+    var s=document.createElement('span');
+    s.className='star'+(i<=n?' on':'');
+    s.textContent=i<=n?'★':'☆';
+    s.setAttribute('role','button');
+    s.setAttribute('aria-label',i+' 星');
+    (function(k){s.onclick=function(){setFormStars(k);};})(i);
+    box.appendChild(s);
+  }
+}
 
 /* ============ SM-2 遗忘曲线调度（简单实现） ============ */
 function sm2Apply(q,grade){
@@ -752,11 +3485,101 @@ function daysBetween(a,b){
   var d1=new Date(a+'T00:00:00'),d2=new Date(b+'T00:00:00');
   return Math.round((d2-d1)/86400000);
 }
+
+/* ============ 智能复习计划（考试倒计时 + 每日配额 + 关联联排） ============ */
+function plan(){return state.plan||(state.plan={examDate:'',daily:10});}
+function savePlan(){
+  var p=plan();
+  p.examDate=$('planExam').value||'';
+  var d=parseInt($('planDaily').value,10);
+  p.daily=(d>0)?Math.min(100,d):10;
+  save();renderAll();
+  toast(p.examDate?'智能计划已保存，首页已更新 🎯':'已保存（未设置考试日期，暂不启用倒计时）');
+}
+function examCountdown(){
+  var p=plan();
+  if(!p.examDate)return null;
+  var d=daysBetween(today(),p.examDate);
+  return {days:d,date:p.examDate};
+}
+/* 今日建议复习量：未掌握题数 / 剩余天数，向上取整，不超过上限；未设考试日期则用到期题数 */
+function dailyTarget(){
+  var pending=state.questions.filter(function(q){return !q.mastered;}).length;
+  if(!pending)return 0;
+  var p=plan();
+  if(p.examDate){
+    var cd=examCountdown();
+    var remain=Math.max(1,cd.days);
+    return Math.max(1,Math.min(p.daily,Math.ceil(pending/remain)));
+  }
+  return Math.max(1,Math.min(p.daily,sm2DueList().length||dueList().length||1));
+}
+/* 关联题：同科目 + 同章节 + 错因有交集，互为关联（排除自身与已掌握） */
+function relatedQuestions(q){
+  var ch=(q.chapter||'').trim();
+  var causes=(q.causes||[]).filter(Boolean);
+  if(!ch&&!causes.length)return [];
+  return state.questions.filter(function(x){
+    if(x.id===q.id||x.mastered)return false;
+    if((x.chapter||'').trim()!==ch)return false;
+    var xc=(x.causes||[]).filter(Boolean);
+    if(!causes.length||!xc.length)return false;
+    return xc.some(function(c){return causes.indexOf(c)>=0;});
+  });
+}
+/* 智能复习队列：今日配额内的到期题 + 各自关联题联排（去重、最多 2 道/题） */
+function smartQueue(){
+  var due=sm2DueList();
+  if(!due.length)due=dueList();
+  var n=dailyTarget();
+  var head=due.slice(0,n);
+  var out=[],seen={};
+  head.forEach(function(q){
+    if(!seen[q.id]){seen[q.id]=1;out.push(q);}
+    relatedQuestions(q).slice(0,2).forEach(function(r){
+      if(!seen[r.id]){seen[r.id]=1;out.push(r);}
+    });
+  });
+  return out;
+}
+function renderSmartCard(){
+  var card=$('smartCard');
+  if(!card)return;
+  var p=plan();
+  if(!p.examDate&&!state.questions.length){card.style.display='none';return;}
+  var cd=examCountdown();
+  var n=dailyTarget();
+  var queue=smartQueue().length;
+  card.style.display='flex';
+  if(cd){
+    var urgent=cd.days<=30&&cd.days>0;
+    $('cdNum').textContent=cd.days>0?cd.days+' 天':(cd.days===0?'今天':'已过'+(-cd.days)+'天');
+    $('cdNum').className='cd-num'+(urgent?' cd-warn':'');
+    $('cdTitle').textContent=cd.days>0?('距 '+cd.date.slice(5).replace('-','/')+' 考试还有 '+cd.days+' 天'):'考试'+((cd.days===0)?'就是今天！':'已结束，可调整考试日期');
+    $('cdText').textContent=cd.days>0?('今日建议复习 '+n+' 题 · 已安排 '+queue+' 题（含关联联排）'):'请到设置中更新考试日期';
+  }else{
+    $('cdNum').textContent=n+' 题';
+    $('cdNum').className='cd-num';
+    $('cdTitle').textContent='今日复习计划';
+    $('cdText').textContent='未设考试日期，按到期题数安排 · 共 '+queue+' 题（含关联联排）';
+  }
+}
 function streakDays(){
   var d=new Date(),s=0;
   if(state.checkins.indexOf(today())<0)d.setDate(d.getDate()-1);
   while(state.checkins.indexOf(fmt(d))>=0){s++;d.setDate(d.getDate()-1);}
   return s;
+}
+/* 自动精进#5：历史最佳连续打卡天数 */
+function bestStreak(){
+  var arr=state.checkins.slice().sort();
+  var best=0,cur=0,prev=null;
+  arr.forEach(function(d){
+    cur=(prev&&daysBetween(prev,d)===1)?cur+1:1;
+    if(cur>best)best=cur;
+    prev=d;
+  });
+  return best;
 }
 function checkin(t){
   if(state.checkins.indexOf(t)<0)state.checkins.push(t);
@@ -765,31 +3588,34 @@ function checkin(t){
 
 /* ============ 通用 ============ */
 var THEME_KEY='kaoyan_cuotiben_theme';
+var THEMES=['light','dark','eye'];
+var THEME_META={light:'#5b6cff',dark:'#14161f',eye:'#dce9df'};
+var THEME_ICON={light:'☀️',dark:'🌙',eye:'🌿'};
+var THEME_MSG={light:'已切换日间模式 ☀️',dark:'已开启夜间模式 🌙',eye:'已开启护眼模式 🌿'};
 function cssVar(name){
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
-function isDark(){return document.documentElement.classList.contains('dark');}
-function updateThemeBtn(){
-  var b=$('themeBtn');
-  if(b)b.textContent=isDark()?'☀️':'🌙';
-}
-function updateThemeColor(){
-  var m=document.querySelector('meta[name=theme-color]');
-  if(m)m.setAttribute('content',isDark()?'#14161f':'#5b6cff');
-}
-function initTheme(){
+function curTheme(){
   var t='light';
   try{t=localStorage.getItem(THEME_KEY)||'light';}catch(e){}
-  document.documentElement.classList.toggle('dark',t==='dark');
-  updateThemeBtn();
-  updateThemeColor();
+  return THEMES.indexOf(t)>=0?t:'light';
 }
+function applyTheme(t){
+  var el=document.documentElement;
+  el.classList.remove('dark','eye');
+  if(t==='dark'||t==='eye')el.classList.add(t);
+  var b=$('themeBtn');
+  if(b)b.textContent=THEME_ICON[t];
+  var m=document.querySelector('meta[name=theme-color]');
+  if(m)m.setAttribute('content',THEME_META[t]);
+}
+function initTheme(){applyTheme(curTheme());}
 function toggleTheme(){
-  document.documentElement.classList.toggle('dark');
-  try{localStorage.setItem(THEME_KEY,isDark()?'dark':'light');}catch(e){}
-  updateThemeBtn();
-  updateThemeColor();
-  toast(isDark()?'已开启夜间模式 🌙':'已切换日间模式 ☀️');
+  var t=curTheme();
+  var next=THEMES[(THEMES.indexOf(t)+1)%THEMES.length];
+  try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+  applyTheme(next);
+  toast(THEME_MSG[next]);
   var v=document.querySelector('.view.active');
   if(v&&v.id==='view-stats')renderStats();
 }
@@ -815,6 +3641,11 @@ function renderTop(){
   var now=new Date();
   $('topDate').textContent=now.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
   $('streakNum').textContent=streakDays();
+  var chip=document.querySelector('.streak-chip');
+  if(chip){
+    var done=state.checkins.indexOf(today())>=0;
+    chip.title='当前连续 '+streakDays()+' 天 · 历史最佳 '+bestStreak()+' 天 · 累计打卡 '+state.checkins.length+' 天'+(done?' · 今日已打卡 ✅':' · 今日还未打卡');
+  }
 }
 function todayAdvice(){
   var n=state.questions.length;
@@ -828,12 +3659,18 @@ function todayAdvice(){
   return {emoji:'📈',title:'掌握率 '+rate+'%，稳步提升',text:'保持节奏：每天复习 + 每周复盘，错题会越来越少。',btn:{t:'去复习',v:'home'}};
 }
 function renderHome(){
+  renderSmartCard();
   var h=new Date().getHours();
   var greet=h<6?'凌晨好':h<12?'早上好':h<14?'中午好':h<18?'下午好':'晚上好';
   $('homeGreeting').textContent=greet+' 👋';
   var due=dueList();
   $('hsDue').textContent=due.length;
   $('hsStreak').textContent=streakDays();
+  var hsSt=$('hsStreak').parentNode;
+  if(hsSt){
+    var done=state.checkins.indexOf(today())>=0;
+    hsSt.title='当前连续 '+streakDays()+' 天 · 历史最佳 '+bestStreak()+' 天 · 累计打卡 '+state.checkins.length+' 天'+(done?' · 今日已打卡 ✅':' · 今日还未打卡');
+  }
   $('hsTotal').textContent=state.questions.length;
   $('hsMastered').textContent=state.questions.filter(function(q){return q.mastered;}).length;
   $('dueCount').textContent=due.length;
@@ -860,9 +3697,10 @@ function renderHome(){
     var chip=nd?(overdue
       ?'<span class="chip chip-overdue">第'+nd.day+'天 · 逾期'+daysBetween(nd.due,today())+'天</span>'
       :'<span class="chip chip-due">第'+nd.day+'天 · 今日</span>'):'';
-    return '<div class="qcard">'+
-      '<div class="qcard-top"><span class="chip chip-subject">'+esc(q.subject)+'</span>'+chip+
-      (q.mastered?'<span class="chip chip-mastered">已掌握</span>':'')+'</div>'+
+    return '<div class="qcard" style="border-left-color:'+subjColor(q.subject)+'">'+
+      '<div class="qcard-top">'+subjChip(q.subject)+chip+
+      (q.mastered?'<span class="chip chip-mastered">已掌握</span>':'')+
+      (q.fav?'<span class="fav-badge">📌</span>':'')+'</div>'+
       '<div class="qcard-stem clamp2">'+esc(q.stem)+'</div>'+
       '<div class="qcard-meta">📚 '+esc(q.chapter||'未分类')+' · 收录 '+esc(q.createdAt)+'</div>'+
       '<div class="qcard-actions"><button class="btn btn-primary" onclick="openDetail(\''+q.id+'\')">📖 复习并打卡</button></div>'+
@@ -884,8 +3722,9 @@ function dueList(){
 function fillSubjectSelect(sel,withNew,keep){
   var subs=allSubjects();
   var cur=keep||sel.value;
-  sel.innerHTML=subs.map(function(s){return '<option value="'+esc(s)+'">'+esc(s)+'</option>';}).join('');
-  if(withNew)sel.insertAdjacentHTML('beforeend','<option value="__new__">➕ 新增科目…</option>');
+  var html=subs.map(function(s){return '<option value="'+esc(s)+'" style="color:'+subjColor(s)+'">'+esc(s)+'</option>';}).join('');
+  if(withNew)html+='<option value="__new__">➕ 新增科目…</option>';
+  if(sel.dataset.lastOpts!==html){sel.innerHTML=html;sel.dataset.lastOpts=html;}
   if(cur&&subs.indexOf(cur)>=0)sel.value=cur;
 }
 function fillCauseSelect(sel,keep){
@@ -893,6 +3732,121 @@ function fillCauseSelect(sel,keep){
   var cur=keep||sel.value;
   sel.innerHTML='<option value="">全部错因</option>'+causes.map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');
   if(cur&&causes.indexOf(cur)>=0)sel.value=cur;
+}
+function fillTagSelect(sel,keep){
+  var tags=allTags();
+  var cur=keep||sel.value;
+  sel.innerHTML='<option value="">全部标签</option>'+tags.map(function(t){return '<option value="'+esc(t)+'">#'+esc(t)+'</option>';}).join('');
+  if(cur&&tags.indexOf(cur)>=0)sel.value=cur;
+}
+/* ============ v27：科目 + 知识点两级联动筛选 ============ */
+function fillSubjectSelect(sel,keep){
+  if(!sel)return;
+  var subs=allSubjects();
+  var cur=keep||sel.value;
+  var html='<option value="">全部科目</option>'+subs.map(function(s){return '<option value="'+esc(s)+'" style="color:'+subjColor(s)+'">'+esc(s)+'</option>';}).join('');
+  if(sel.dataset.lastOpts!==html){sel.innerHTML=html;sel.dataset.lastOpts=html;}
+  if(cur&&subs.indexOf(cur)>=0)sel.value=cur;
+}
+function chapterOptions(subj){
+  var set={};
+  state.questions.forEach(function(q){
+    if(!q.chapter)return;
+    if(subj&&q.subject!==subj)return;
+    set[q.chapter]=1;
+  });
+  return Object.keys(set).sort();
+}
+function fillChapterSelect(sel,keep,subj){
+  if(!sel)return;
+  var chs=chapterOptions(subj||'');
+  var cur=keep||sel.value;
+  var html='<option value="">全部章节 / 知识点</option>'+chs.map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');
+  if(sel.dataset.lastOpts!==html){sel.innerHTML=html;sel.dataset.lastOpts=html;}
+  if(cur&&chs.indexOf(cur)>=0)sel.value=cur;
+}
+function onSubjectFilter(){
+  listSubject='';
+  renderSubjectTabs();
+  fillChapterSelect($('fChapter'),false,$('fSubject').value);
+  listPage=0;
+  renderList();
+}
+function renderSubjectTabs(){
+  var subs=allSubjects();
+  var tabs=document.getElementById('subjectTabs');
+  if(!tabs)return;
+  var html='<button class="subj-tab'+(listSubject===''?' active':'')+'" onclick="selectSubject(\'\')">📚 全部</button>'+
+    subs.map(function(s){
+      var n=state.questions.filter(function(q){return q.subject===s;}).length;
+      var c=subjColor(s);
+      var active=listSubject===s;
+      return '<button class="subj-tab'+(active?' active':'')+'"'+
+        (active?' style="background:'+c+';box-shadow:0 3px 8px '+c+'66"':'')+
+        ' onclick="selectSubject(\''+esc(s).replace(/'/g,'&#39;')+'\')">'+
+        '<i class="subj-dot" style="background:'+c+'"></i>'+esc(s)+' <i style="font-style:normal;opacity:.7">'+n+'</i></button>';
+    }).join('');
+  tabs.innerHTML=html;
+}
+function selectSubject(s){
+  listSubject=s;
+  if($('fSubject'))$('fSubject').value='';
+  if($('fChapter'))$('fChapter').value='';
+  listPage=0;
+  renderList();
+  var box=$('questionList');
+  if(box)box.scrollTop=0;
+  window.scrollTo(0,0);
+}
+/* ============ 搜索历史与快捷筛选 ============ */
+var SEARCH_HIST_MAX=8;
+function recordSearch(kw){
+  kw=(kw||'').trim();
+  if(!kw)return;
+  if(!Array.isArray(state.searchHistory))state.searchHistory=[];
+  var list=state.searchHistory.filter(function(k){return k!==kw;});
+  list.unshift(kw);
+  state.searchHistory=list.slice(0,SEARCH_HIST_MAX);
+  save();
+  renderSearchHist();
+}
+function renderSearchHist(){
+  var box=$('searchHist');
+  if(!box)return;
+  var list=state.searchHistory||[];
+  box.classList.toggle('hide',!list.length);
+  if(!list.length){box.innerHTML='';return;}
+  box.innerHTML='<span class="sh-label">🕘 最近搜索</span>'+
+    list.map(function(k,i){
+      return '<button type="button" class="chip-search" data-k="'+esc(k)+'" onclick="useSearch(this.dataset.k)" title="'+esc(k)+'">'+esc(k)+'</button>';
+    }).join('')+
+    '<button type="button" class="sh-clear" onclick="clearSearchHist()">清空</button>';
+}
+function useSearch(k){
+  if(k==null)return;
+  $('fKw').value=k;
+  listPage=0;
+  renderList();
+  $('fKw').focus();
+}
+function clearSearchHist(){
+  state.searchHistory=[];
+  save();
+  renderSearchHist();
+  toast('已清空搜索历史');
+}
+/* ============ 自动精进#4：科目自定义颜色 ============ */
+var SUBJECT_PALETTE=['#5b6cff','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#14b8a6','#f97316','#84cc16'];
+function subjColor(name){
+  var map=state.subjectColors||{};
+  if(map[name])return map[name];
+  var h=0,s=String(name||'');
+  for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;
+  return SUBJECT_PALETTE[h%SUBJECT_PALETTE.length];
+}
+function subjChip(name){
+  var c=subjColor(name);
+  return '<span class="chip chip-subject" style="background:'+c+'24;color:'+c+'">'+esc(name)+'</span>';
 }
 function allSubjects(){
   var set={};
@@ -906,31 +3860,61 @@ function allCauses(){
   state.questions.forEach(function(q){(q.causes||[]).forEach(function(c){if(c)set[c]=1;});});
   return Object.keys(set);
 }
+function allTags(){
+  var set={};
+  state.questions.forEach(function(q){(q.tags||[]).forEach(function(t){if(t)set[t]=1;});});
+  return Object.keys(set);
+}
 function filtered(){
   var kw=$('fKw').value.trim().toLowerCase();
-  var subj=$('fSubject').value;
+  var subj=listSubject;
+  var subjSel=$('fSubject')?$('fSubject').value:'';
   var ch=$('fChapter').value.trim().toLowerCase();
   var cause=$('fCause').value;
+  var tag=$('fTag').value;
   var status=listStatus;
-  return state.questions.filter(function(q){
+  var starsSel=$('fStars')?$('fStars').value:'';
+  var favSel=$('fFav')?$('fFav').value:'';
+  var sort=$('fSort')?$('fSort').value:'';
+  var res=state.questions.filter(function(q){
     if(status==='open'&&q.mastered)return false;
     if(status==='done'&&!q.mastered)return false;
+    if(favSel==='fav'&&!q.fav)return false;
     if(subj&&q.subject!==subj)return false;
+    if(subjSel&&q.subject!==subjSel)return false;
     if(ch&&(q.chapter||'').toLowerCase().indexOf(ch)<0)return false;
     if(cause&&(q.causes||[]).indexOf(cause)<0)return false;
+    if(tag&&(q.tags||[]).indexOf(tag)<0)return false;
+    if(starsSel&&(q.stars||3)!==parseInt(starsSel,10))return false;
     if(kw){
-      var hay=[q.stem,q.wrong,q.solution,q.note,q.chapter,q.subject].join(' ').toLowerCase();
+      var hay=[q.stem,q.wrong,q.solution,q.note,q.chapter,q.subject,(q.tags||[]).join(' ')].join(' ').toLowerCase();
       if(hay.indexOf(kw)<0)return false;
     }
     return true;
   });
+  var favCmp=function(a,b){return (b.fav?1:0)-(a.fav?1:0);};
+  if(sort==='star-desc')res.sort(function(a,b){var f=favCmp(a,b);if(f)return f;return (b.stars||3)-(a.stars||3);});
+  else if(sort==='star-asc')res.sort(function(a,b){var f=favCmp(a,b);if(f)return f;return (a.stars||3)-(b.stars||3);});
+  else res.sort(favCmp);
+  return res;
 }
-var listStatus='';
-function setStatus(st){listStatus=st;renderList();}
-function onFilter(){renderList();}
+var listStatus='',listSubject='';
+var PAGE_SIZE=50,listPage=0; // v22：大数据量列表分页（每页 50 条）
+function setStatus(st){listStatus=st;listPage=0;renderList();}
+var filterTimer=null,histTimer=null;
+function onFilter(){
+  clearTimeout(filterTimer);clearTimeout(histTimer);
+  listPage=0;
+  filterTimer=setTimeout(renderList,120);
+  histTimer=setTimeout(function(){recordSearch($('fKw').value);},600);
+}
 function renderList(){
-  fillSubjectSelect($('fSubject'),false,true);
+  renderSubjectTabs();
+  renderSearchHist();
   fillCauseSelect($('fCause'),true);
+  fillTagSelect($('fTag'),true);
+  fillSubjectSelect($('fSubject'),true);
+  fillChapterSelect($('fChapter'),true,$('fSubject').value);
   var openN=state.questions.filter(function(q){return !q.mastered;}).length;
   var doneN=state.questions.length-openN;
   $('statusTabs').innerHTML=
@@ -944,26 +3928,48 @@ function renderList(){
     box.innerHTML='<div class="empty"><span class="em">🗂</span>没有符合条件的错题<br><button class="btn btn-primary cta" onclick="openAdd(null)">去录入</button></div>';
     return;
   }
-  box.innerHTML=list.map(function(q){
+  var pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));
+  if(listPage>pages-1)listPage=pages-1;
+  if(listPage<0)listPage=0;
+  var pageList=list.slice(listPage*PAGE_SIZE,(listPage+1)*PAGE_SIZE);
+  box.innerHTML=pageList.map(function(q){
     var nd=nextDue(q);
     var statusChip=q.mastered
       ?'<span class="chip chip-mastered">已掌握</span>'
       :(nd?'<span class="chip '+(nd.due<today()?'chip-overdue':'chip-due')+'">第'+nd.day+'天'+(nd.due<today()?' · 逾期':' · 待复习')+'</span>'
         :'<span class="chip chip-unmastered">复习完成</span>');
     var causes=(q.causes||[]).map(function(c){return '<span class="chip chip-cause">'+esc(c)+'</span>';}).join('');
-    return '<div class="qcard">'+
-      '<div class="qcard-top"><span class="chip chip-subject">'+esc(q.subject)+'</span>'+statusChip+'</div>'+
+    var tags=(q.tags||[]).map(function(t){return '<span class="tag-chip">#'+esc(t)+'</span>';}).join('');
+    return '<div class="qcard" style="border-left-color:'+subjColor(q.subject)+'">'+
+      '<div class="qcard-top">'+subjChip(q.subject)+statusChip+(q.fav?'<span class="fav-badge">📌 已收藏</span>':'')+starHtml(q.stars)+'</div>'+
       '<div class="qcard-stem clamp3">'+esc(q.stem)+'</div>'+
-      (q.img?'<img class="qimg-thumb" src="'+q.img+'" alt="题目截图" onclick="openDetail(\''+q.id+'\')">':'')+
+      (q.img?'<img class="qimg-thumb" loading="lazy" src="'+q.img+'" alt="题目截图" onclick="openDetail(\''+q.id+'\')">':'')+
       '<div class="qcard-meta">📚 '+esc(q.chapter||'未分类')+' · 收录 '+esc(q.createdAt)+' · 复习 '+doneCount(q)+'/'+(q.reviews||[]).length+'</div>'+
       (causes?'<div class="qcard-causes">'+causes+'</div>':'')+
+      (tags?'<div class="qcard-tags">'+tags+'</div>':'')+
       '<div class="qcard-actions">'+
+        '<button class="btn btn-sm '+(q.fav?'btn-primary':'btn-ghost')+'" onclick="toggleFav(\''+q.id+'\')">'+(q.fav?'📌 已收藏':'⭐ 收藏')+'</button>'+
         '<button class="btn btn-ghost btn-sm" onclick="openDetail(\''+q.id+'\')">查看</button>'+
         '<button class="btn btn-ghost btn-sm" onclick="openAdd(\''+q.id+'\')">编辑</button>'+
         '<button class="btn '+(q.mastered?'btn-ghost':'btn-ok')+' btn-sm" onclick="toggleMastered(\''+q.id+'\')">'+(q.mastered?'↩️ 取消掌握':'✅ 已掌握')+'</button>'+
         '<button class="btn btn-danger btn-sm" onclick="deleteQ(\''+q.id+'\')">删除</button>'+
       '</div></div>';
-  }).join('');
+  }).join('')+(pages>1?pagerHtml(list.length,pages):'');
+}
+/* ============ v22 大数据量分页 ============ */
+function pagerHtml(total,pages){
+  return '<div class="pager">'+
+    '<button class="pager-btn" onclick="gotoPage('+(listPage-1)+')"'+(listPage===0?' disabled':'')+'>‹ 上一页</button>'+
+    '<span class="pager-info">第 <b>'+(listPage+1)+'</b> / '+pages+' 页 · 共 '+total+' 题</span>'+
+    '<button class="pager-btn" onclick="gotoPage('+(listPage+1)+')"'+(listPage>=pages-1?' disabled':'')+'>下一页 ›</button>'+
+    '</div>';
+}
+function gotoPage(p){
+  var pages=Math.max(1,Math.ceil(filtered().length/PAGE_SIZE));
+  if(p<0||p>pages-1)return;
+  listPage=p;
+  renderList();
+  window.scrollTo(0,0);
 }
 
 /* ============ 错题打印版 ============ */
@@ -994,6 +4000,102 @@ function printQuestions(){
   toast('已调起打印，共 '+list.length+' 题');
 }
 
+/* ============ 复习手册导出（浏览器打印排版） ============ */
+function exportHandbook(){
+  var all=state.questions;
+  if(!all.length){toast('还没有错题，先录入几道吧');return;}
+  var now=new Date();
+  var pad=function(n){return (n<10?'0':'')+n;};
+  var stamp=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  var mastered=all.filter(function(q){return q.mastered;}).length;
+  var pending=all.length-mastered;
+  var rate=Math.round(mastered/all.length*100);
+  var diffText=DIFFS.map(function(d){
+    return '难度'+d+' '+all.filter(function(q){return qDiff(q)===d;}).length+' 题';
+  }).join(' · ');
+  var hb=state.handbook||{name:'',date:''};
+  var cvName=hb.name?esc(hb.name):'';
+  var cvDate=hb.date?esc(hb.date):stamp;
+  /* 封面 */
+  var html='<div class="print-cover">'+
+    '<div class="logo">KAOYAN CUOTIBEN</div>'+
+    '<h1>考研错题复习手册</h1>'+
+    '<div class="sub">共 '+all.length+' 道错题</div>'+
+    '<div class="cv-stats">'+
+      '<div class="cv-stat"><b>'+all.length+'</b><span>错题总数</span></div>'+
+      '<div class="cv-stat"><b>'+mastered+'</b><span>已掌握</span></div>'+
+      '<div class="cv-stat"><b>'+pending+'</b><span>复习中</span></div>'+
+      '<div class="cv-stat"><b>'+rate+'%</b><span>掌握率</span></div>'+
+    '</div>'+
+    '<div class="cv-diff">'+diffText+'</div>'+
+    '<div class="cv-fields">'+
+      '<div class="cv-field"><span class="cv-label">姓名</span><br><span class="cv-line">'+cvName+'</span></div>'+
+      '<div class="cv-field"><span class="cv-label">日期</span><br><span class="cv-line">'+cvDate+'</span></div>'+
+    '</div>'+
+    '</div>';
+  /* 目录：按科目 → 章节 两级 */
+  var subjMap={};
+  all.forEach(function(q){var s=q.subject||'未分类';if(!subjMap[s])subjMap[s]=[];subjMap[s].push(q);});
+  var subjects=Object.keys(subjMap).map(function(s){return {name:s,list:subjMap[s]};});
+  subjects.sort(function(a,b){return b.list.length-a.list.length;});
+  function chapterMap(list){
+    var m={};
+    list.forEach(function(q){var c=(q.chapter||'').trim()||'未分类';if(!m[c])m[c]=[];m[c].push(q);});
+    return m;
+  }
+  function sortedChapters(m){return Object.keys(m).sort(function(a,b){return a.localeCompare(b,'zh');});}
+  html+='<div class="print-toc"><h2>目 录</h2><table>';
+  subjects.forEach(function(s,i){
+    var m=s.list.filter(function(q){return q.mastered;}).length;
+    html+='<tr><td>'+(i+1)+'. '+esc(s.name)+'</td><td class="n">'+s.list.length+' 题 · 掌握 '+m+'</td></tr>';
+    var chMap=chapterMap(s.list);
+    sortedChapters(chMap).forEach(function(c,ci){
+      html+='<tr class="toc-ch"><td>　'+(i+1)+'-'+(ci+1)+' '+esc(c)+'</td><td class="n">'+chMap[c].length+' 题</td></tr>';
+    });
+  });
+  html+='</table></div>';
+  /* 各科目分页，科目内按章节排序 */
+  var qn=0;
+  subjects.forEach(function(s,i){
+    var dates=s.list.map(function(q){return q.createdAt||'';}).filter(Boolean).sort();
+    html+='<div class="print-chapter">'+
+      '<h2 class="subj-title">'+esc(s.name)+'（'+s.list.length+' 题）</h2>'+
+      '<div class="subj-desc">掌握 '+s.list.filter(function(q){return q.mastered;}).length+' 题 · 收录 '+(dates[0]||'-')+' ~ '+(dates[dates.length-1]||'-')+'</div>';
+    var chMap=chapterMap(s.list);
+    sortedChapters(chMap).forEach(function(c,ci){
+      html+='<div class="print-ch3">'+(i+1)+'-'+(ci+1)+' '+esc(c)+'（'+chMap[c].length+' 题）</div>';
+      chMap[c].forEach(function(q){
+        qn++;
+        var causes=(q.causes||[]).map(esc).join('、');
+        html+='<div class="print-card">'+
+          '<div class="print-meta"><b>'+esc(q.subject)+' · '+esc(qType(q))+'</b>'+
+          '<span><span class="print-diff print-diff-'+qDiff(q)+'">'+qDiff(q)+'</span> '+
+          '<span class="print-status">'+(q.mastered?'已掌握':'复习中')+'</span></span></div>'+
+          '<div class="print-qnum">第 '+qn+' 题 · 收录于 '+esc(q.createdAt||'')+'</div>'+
+          '<div class="print-sec"><span>题干</span><p>'+esc(q.stem)+'</p></div>'+
+          (q.img?'<div class="print-sec"><span>题目截图</span><img src="'+q.img+'" alt="题目截图"></div>':'')+
+          (q.wrong?'<div class="print-sec"><span>我的错解</span><p>'+esc(q.wrong)+'</p></div>':'')+
+          (causes?'<div class="print-sec"><span>错因</span><p>'+causes+'</p></div>':'')+
+          (q.solution?'<div class="print-sec"><span>正解与解析</span><p>'+esc(q.solution)+'</p></div>':'')+
+        '</div>';
+      });
+    });
+    html+='</div>';
+  });
+  /* 附录：错因统计 */
+  var dist=causeDist().sort(function(a,b){return b.n-a.n;});
+  if(dist.length){
+    html+='<div class="print-chapter"><h2 class="subj-title">附录 · 错因统计</h2>';
+    html+='<table class="print-tbl">'+dist.map(function(d){
+      return '<tr><td>'+esc(d.name)+'</td><td class="n">'+d.n+' 次</td></tr>';
+    }).join('')+'</table></div>';
+  }
+  html+='<div class="print-foot">— 考研错题本 · 复习手册 · 共 '+all.length+' 题 · 坚持复习，把不会的变成会的 —</div>';
+  $('printArea').innerHTML=html;
+  window.print();
+  toast('已生成复习手册并调起打印，共 '+all.length+' 题');
+}
+
 /* ============ 录入 / 编辑 ============ */
 var editingId=null;
 var pendingImg=''; // 待保存的题目截图 base64（data URL）
@@ -1002,6 +4104,16 @@ var pendingImg=''; // 待保存的题目截图 base64（data URL）
 var sr=null,voiceOn=false,voiceGot=false;
 function speechSupported(){
   return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
+}
+function updateVoiceBtn(){
+  var vb=$('voiceBtn');
+  if(!vb)return;
+  var ok=speechSupported();
+  vb.disabled=!ok;
+  vb.title=ok?'语音录入（Web Speech API）':'当前浏览器不支持语音识别，建议使用 Chrome / Edge';
+  if(!ok)vb.textContent='🎙️ 语音不可用';
+  else vb.textContent=voiceOn?'⏹ 停止录音':'🎙️ 语音录入';
+  vb.classList.toggle('voice-recording',voiceOn&&ok);
 }
 function toggleVoiceInput(){
   if(voiceOn){stopVoiceInput();return;}
@@ -1013,16 +4125,18 @@ function toggleVoiceInput(){
   sr.continuous=false;
   sr.maxAlternatives=1;
   voiceOn=true;voiceGot=false;
-  var vb=$('voiceBtn');
-  vb.textContent='⏹ 停止录音';
-  vb.classList.add('voice-recording');
+  updateVoiceBtn();
   $('voiceHint').style.display='block';
+  $('voiceHint').textContent='🔴 正在聆听…请清晰地读出题目内容（再次点击停止）';
   sr.onresult=function(e){
-    var t='';
+    var final='',interim='';
     for(var i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal)t+=e.results[i][0].transcript;
+      var r=e.results[i];
+      if(r.isFinal)final+=r[0].transcript;else interim+=r[0].transcript;
     }
-    if(t){voiceGot=true;appendVoiceText(t);}
+    var vh=$('voiceHint');
+    if(interim&&vh)vh.textContent='🔴 正在聆听… '+interim;
+    if(final){voiceGot=true;appendVoiceText(final);if(vh)vh.innerHTML='🔴 已识别：<b>'+esc(final)+'</b>（可继续说话追加）';}
   };
   sr.onerror=function(e){
     stopVoiceInput();
@@ -1045,10 +4159,9 @@ function appendVoiceText(t){
 function stopVoiceInput(){
   voiceOn=false;
   if(sr){try{sr.stop();}catch(e){}sr=null;}
-  var vb=$('voiceBtn');
-  if(vb){vb.textContent='🎙️ 语音录入';vb.classList.remove('voice-recording');}
+  updateVoiceBtn();
   var vh=$('voiceHint');
-  if(vh)vh.style.display='none';
+  if(vh){vh.style.display='none';vh.textContent='';}
 }
 
 /* 图片压缩：最长边 900px，JPEG 0.72；超限再压一档；返回 dataURL */
@@ -1105,13 +4218,22 @@ function clearImg(){
 }
 function openAdd(id){
   editingId=id||null;
+  stopVoiceInput();
+  updateVoiceBtn();
   var q=id?state.questions.filter(function(x){return x.id===id;})[0]:null;
   $('formTitle').textContent=q?'✏️ 编辑错题':'➕ 录入错题';
   $('btnCancelEdit').classList.toggle('hide',!q);
   fillSubjectSelect($('formSubject'),true,q?q.subject:null);
+  fillSubjectSelect($('batchSubject'),true,null);
+  $('batchNewSubjectWrap').classList.add('hide');
   $('newSubjectWrap').classList.add('hide');
   $('newSubject').value='';
   $('formChapter').value=q?(q.chapter||''):'';
+  $('fTags').value=q?(q.tags||[]).join(', '):'';
+  $('formType').value=q?(qType(q)):'选择题';
+  $('formDiff').value=q?(qDiff(q)):'中';
+  formStarsVal=q?(q.stars||3):3;
+  renderStarPick(formStarsVal);
   $('fStem').value=q?(q.stem||''):'';
   $('fWrong').value=q?(q.wrong||''):'';
   $('fSolution').value=q?(q.solution||''):'';
@@ -1178,15 +4300,20 @@ function saveForm(){
     return;
   }
   var causes=[];$('causeChips').querySelectorAll('input:checked').forEach(function(i){causes.push(i.value);});
+  var tags=$('fTags').value.split(/[,，;；]/).map(function(t){return t.trim();}).filter(Boolean);
   var data={
     subject:subject,
     chapter:$('formChapter').value.trim(),
     stem:stem,
     wrong:$('fWrong').value.trim(),
     causes:causes,
+    tags:tags,
     solution:$('fSolution').value.trim(),
     note:$('fNote').value.trim(),
-    img:pendingImg
+    img:pendingImg,
+    qtype:qType({qtype:$('formType').value}),
+    diff:qDiff({diff:$('formDiff').value}),
+    stars:formStarsVal||3
   };
   var dup=findDuplicates(data,editingId);
   if(dup.length){
@@ -1200,7 +4327,8 @@ function saveForm(){
   }else{
     state.questions.unshift({
       id:uid(),subject:data.subject,chapter:data.chapter,stem:data.stem,wrong:data.wrong,
-      causes:data.causes,solution:data.solution,note:data.note,img:data.img,
+      causes:data.causes,tags:data.tags,solution:data.solution,note:data.note,img:data.img,
+      qtype:data.qtype,diff:data.diff,stars:data.stars,
       mastered:false,createdAt:today(),masteredAt:null,
       reviews:INTERVALS.map(function(n){return {day:n,due:addDays(today(),n),done:null};}),
       sm2:{ef:2.5,interval:0,reps:0,next:null,lastGrade:null}
@@ -1243,32 +4371,40 @@ function openDetail(id){
   }).join('');
   var nd=nextDue(q);
   var ch=(q.chapter||'').trim();
-  var sim=similarQuestions(q);
+  var sim=relatedQuestions(q).slice(0,3);
   $('sheetBody').innerHTML=
     '<div class="sheet-head"><h3>错题详情</h3><button class="close-x" onclick="closeDetail()">✕</button></div>'+
-    '<div class="qcard-top" style="margin-bottom:10px"><span class="chip chip-subject">'+esc(q.subject)+'</span>'+
-      (q.mastered?'<span class="chip chip-mastered">已掌握</span>':'<span class="chip chip-unmastered">复习中</span>')+'</div>'+
-    '<div class="dsec"><div class="dsec-title">题干</div><div class="dsec-body">'+esc(q.stem)+'</div></div>'+
+    '<div class="qcard-top" style="margin-bottom:10px">'+subjChip(q.subject)+
+      '<span class="chip" style="background:var(--ghost);color:var(--text2)">'+esc(qType(q))+'</span>'+
+      '<span class="chip" style="background:'+DIFF_COLORS[qDiff(q)]+';color:#fff">难度 · '+qDiff(q)+'</span>'+
+      (q.mastered?'<span class="chip chip-mastered">已掌握</span>':'<span class="chip chip-unmastered">复习中</span>')+
+      starPickerHtml(q.id,q.stars)+'</div>'+
+    '<div class="dsec"><div class="dsec-title">题干</div><div class="dsec-body stem-body">'+esc(q.stem)+'</div></div>'+
     (q.img?'<div class="dsec"><div class="dsec-title">题目截图</div><img class="qimg-detail" src="'+q.img+'" alt="题目截图"></div>':'')+
     (q.wrong?'<div class="dsec"><div class="dsec-title">我的错解</div><div class="dsec-body">'+esc(q.wrong)+'</div></div>':'')+
     (causes?'<div class="dsec"><div class="dsec-title">错因</div><div class="qcard-causes">'+causes+'</div></div>':'')+
+    ((q.tags||[]).length?'<div class="dsec"><div class="dsec-title">标签</div><div class="qcard-tags">'+(q.tags||[]).map(function(t){return '<span class="tag-chip">#'+esc(t)+'</span>';}).join('')+'</div></div>':'')+
     (q.solution?'<div class="dsec"><div class="dsec-title">正解与解析</div><div class="dsec-body">'+esc(q.solution)+'</div></div>':'')+
     (q.note?'<div class="dsec"><div class="dsec-title">备注</div><div class="dsec-body">'+esc(q.note)+'</div></div>':'')+
     '<div class="dsec"><div class="dsec-title">复习调度</div><div class="dsec-body" style="font-size:13px">'+sm2StateText(q)+'</div></div>'+
     '<div class="dsec"><div class="dsec-title">艾宾浩斯复习计划（'+doneCount(q)+'/'+(q.reviews||[]).length+'）</div>'+rv+
       '<div class="prog">'+(q.reviews||[]).map(function(r){return '<i class="'+(r.done?'done':'')+'"></i>';}).join('')+'</div></div>'+
-    (sim?'<div class="dsec"><div class="dsec-title">🔗 相似题推荐</div>'+
-      '<div class="sim-card" onclick="openDetail(\''+sim.id+'\')">'+
-        '<div class="sim-meta">'+esc(sim.subject)+' · '+esc(sim.chapter||'未分类')+' · 同'+((sim.chapter||'').trim()===ch&&(sim.causes||[]).some(function(c){return (q.causes||[]).indexOf(c)>=0;})?'章节同错因':'章节/错因')+'</div>'+
-        '<div class="sim-stem clamp2">'+esc(sim.stem)+'</div>'+
-        '<span class="sim-go">查看这道题 →</span>'+
-      '</div></div>':'')+
+    (sim.length?'<div class="dsec"><div class="dsec-title">🔗 关联错题（同章节同错因，复习时联排）</div>'+
+      sim.map(function(r){
+        var tag=(r.chapter||'').trim()===ch&&(r.causes||[]).some(function(c){return (q.causes||[]).indexOf(c)>=0;});
+        return '<div class="sim-card" onclick="openDetail(\''+r.id+'\')">'+
+          '<div class="sim-meta">'+esc(r.subject)+' · '+esc(r.chapter||'未分类')+' · '+esc((r.causes||[]).join('、')||'未标错因')+(r.mastered?' · 已掌握':'')+'</div>'+
+          '<div class="sim-stem clamp2">'+esc(r.stem)+'</div>'+
+          '<span class="sim-go">查看这道题 →</span>'+
+        '</div>';
+      }).join('')+'</div>':'')+
     '<div class="dsec"><div class="dsec-body plain" style="font-size:12.5px;color:var(--text3)">📚 '+esc(q.chapter||'未分类')+' · 收录于 '+esc(q.createdAt)+'</div></div>'+
     '<div class="actions">'+
       '<button class="btn btn-ok" '+(dueNodes(q).length?'':'disabled')+' onclick="checkinQ(\''+q.id+'\')">✅ 打卡复习'+(dueNodes(q).length?'（'+dueNodes(q).length+'）':'')+'</button>'+
       '<button class="btn btn-ghost" '+(dueNodes(q).length?'':'disabled')+' onclick="checkinQ(\''+q.id+'\',true)">⚡ 打卡并掌握</button>'+
     '</div>'+
     '<div class="actions">'+
+      '<button class="btn '+(q.fav?'btn-primary':'btn-ghost')+'" onclick="toggleFav(\''+q.id+'\');openDetail(\''+q.id+'\')">'+(q.fav?'📌 取消收藏':'⭐ 收藏')+'</button>'+
       '<button class="btn btn-ghost" onclick="toggleMastered(\''+q.id+'\');openDetail(\''+q.id+'\')">'+(q.mastered?'↩️ 取消掌握':'🎯 标记已掌握')+'</button>'+
       '<button class="btn btn-ghost" onclick="shareCard(\''+q.id+'\')">📤 分享卡片</button>'+
       '<button class="btn btn-ghost" onclick="openAdd(\''+q.id+'\');closeDetail()">✏️ 编辑</button>'+
@@ -1303,6 +4439,15 @@ function toggleMastered(id){
   renderAll();
   if(q.mastered)toast('已标记掌握，不再进入复习清单 ✅');
 }
+/* 自动精进#6：收藏夹（重要题目置顶） */
+function toggleFav(id){
+  var q=state.questions.filter(function(x){return x.id===id;})[0];
+  if(!q)return;
+  q.fav=!q.fav;
+  save();
+  renderAll();
+  toast(q.fav?'已收藏到收藏夹，列表置顶 📌':'已取消收藏');
+}
 function deleteQ(id){
   if(!confirm('确定删除这道错题吗？删除后不可恢复。'))return;
   state.questions=state.questions.filter(function(x){return x.id!==id;});
@@ -1320,10 +4465,21 @@ function shareCard(id){
   $('shareBody').innerHTML=
     '<div class="sheet-head"><h3>🖼️ 错题卡片</h3><button class="close-x" onclick="closeShare()">✕</button></div>'+
     '<div class="share-preview"><img id="shareImg" alt="正在生成…"></div>'+
-    '<p class="share-tip">📱 长按图片可保存到相册 · 💻 桌面端右键另存为<br>分享给研友，互相监督进步更快</p>';
+    '<div class="share-actions"><button class="btn btn-primary" onclick="saveShareImg()">💾 保存图片</button></div>'+
+    '<p class="share-tip">📱 长按图片可保存到相册 · 💻 点击上方按钮直接下载<br>分享给研友，互相监督进步更快</p>';
   drawShareCard(q,function(url){$('shareImg').src=url;});
 }
 function closeShare(){$('shareOverlay').classList.remove('show');}
+function saveShareImg(){
+  var img=$('shareImg');
+  if(!img||!img.src||img.src.indexOf('data:')!==0){toast('图片尚未生成，请稍候再试');return;}
+  var a=document.createElement('a');
+  a.href=img.src;
+  a.download='错题卡片-'+today().replace(/-/g,'')+'.png';
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){a.remove();},300);
+  toast('图片已保存 📥');
+}
 function wrapText(ctx,text,maxW){
   var lines=[],cur='';
   for(var i=0;i<text.length;i++){
@@ -1347,7 +4503,7 @@ function roundRect(ctx,x,y,w,h,r){
 }
 function drawShareCard(q,cb){
   var W=1080,P=84,lineH=54,maxW=W-P*2;
-  var HEAD=216,FOOT=120,labelFs=30,bodyFs=40;
+  var HEAD=216,FOOT=150,labelFs=30,bodyFs=40;
   var fontBase='"PingFang SC","Microsoft YaHei",sans-serif';
   var cv=document.createElement('canvas');
   cv.width=W;cv.height=1400;
@@ -1389,6 +4545,11 @@ function drawShareCard(q,cb){
   var hg=ctx.createLinearGradient(0,0,W,HEAD);
   hg.addColorStop(0,'#5b6cff');hg.addColorStop(1,'#8b5cf6');
   ctx.fillStyle=hg;ctx.fillRect(0,0,W,HEAD);
+  // 装饰圆点
+  ctx.fillStyle='rgba(255,255,255,.22)';
+  [[W-64,58,11],[W-98,92,7],[W-50,104,5]].forEach(function(p){
+    ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,Math.PI*2);ctx.fill();
+  });
   ctx.fillStyle='#fff';
   ctx.font='700 56px '+fontBase;
   ctx.fillText('📕 考研错题本',P,88);
@@ -1423,16 +4584,18 @@ function drawShareCard(q,cb){
   }
   drawSec('题干',stemLs,true);
   function finish(){
-    // 底部水印
     y+=10;
     ctx.strokeStyle='#e8eaf3';ctx.lineWidth=2;
     ctx.beginPath();ctx.moveTo(P,y);ctx.lineTo(W-P,y);ctx.stroke();
-    y+=36;
+    y+=44;
     var now=new Date(),pad=function(n){return (n<10?'0':'')+n;};
     var stamp=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+    ctx.font='700 32px '+fontBase;
+    ctx.fillStyle='#5b6cff';
+    ctx.fillText('🔥 已连续打卡 '+streakDays()+' 天',P,y);
     ctx.font='400 26px '+fontBase;
     ctx.fillStyle='#b3b8c9';
-    ctx.fillText('— '+stamp+' · 考研错题本 —',P,y);
+    ctx.fillText('— '+stamp+' · 考研错题本 · 日拱一卒 —',P,y+44);
     cb(cv.toDataURL('image/png'));
   }
   if(q.img){
@@ -1543,11 +4706,138 @@ function quizAnswer(ok){
 }
 function closeQuiz(){$('quizOverlay').classList.remove('show');}
 
+/* ============ 自动精进#3：冲刺自测 ============ */
+var sprintList=[],sprintIdx=0,sprintOk=0,sprintRevealed=false,sprintLeft=0,sprintTimer=null;
+var sprintWrong=[];
+var SPRINT_COUNT=10,SPRINT_SECS=60;
+function sprintPool(){
+  var un=state.questions.filter(function(q){return !q.mastered;});
+  var pool=un.length?un:state.questions;
+  var arr=pool.slice();
+  for(var i=arr.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=arr[i];arr[i]=arr[j];arr[j]=t;
+  }
+  return arr.slice(0,Math.min(SPRINT_COUNT,arr.length));
+}
+function startSprint(){
+  sprintList=sprintPool();
+  if(!sprintList.length){toast('还没有错题，先录入几道吧');return;}
+  sprintIdx=0;sprintOk=0;sprintRevealed=false;sprintWrong=[];
+  $('sprintOverlay').classList.add('show');
+  sprintStartTimer();
+  sprintRender();
+}
+function sprintStartTimer(){
+  sprintClearTimer();
+  sprintLeft=SPRINT_SECS;
+  sprintTimer=setInterval(sprintTick,1000);
+}
+function sprintClearTimer(){if(sprintTimer!==null&&sprintTimer!==undefined){clearInterval(sprintTimer);sprintTimer=null;}}
+function sprintTick(){
+  sprintLeft--;
+  if(sprintLeft<=0){
+    sprintLeft=0;
+    sprintGrade(false);
+    return;
+  }
+  var t=$('sprintTimer');
+  if(t)t.textContent=sprintLeft+'s';
+  var tb=$('sprintTimeBox');
+  if(tb)tb.classList.toggle('warn',sprintLeft<=10);
+}
+function sprintRender(){
+  var q=sprintList[sprintIdx],n=sprintList.length;
+  var html='<div class="quiz-head"><h3>⏱️ 冲刺自测</h3><button class="close-x" onclick="closeSprint()">✕</button></div>'+
+    '<div class="quiz-prog"><i style="width:'+Math.round((sprintIdx+1)/n*100)+'%"></i></div>'+
+    '<div class="sprint-top">'+
+      '<div class="sprint-pos">第 '+(sprintIdx+1)+' / '+n+' 题</div>'+
+      '<div class="sprint-time" id="sprintTimeBox"><span>⏱</span> <b id="sprintTimer">'+sprintLeft+'s</b></div>'+
+    '</div>'+
+    '<div class="dsec"><div class="dsec-title">'+esc(q.subject)+' · '+esc(q.chapter||'未分类')+'</div></div>'+
+    '<div class="quiz-q">'+esc(q.stem)+'</div>'+
+    (q.img?'<img class="qimg-detail" src="'+q.img+'" alt="题目截图" style="margin-bottom:12px">':'');
+  if(sprintRevealed){
+    html+='<div class="quiz-reveal">'+
+      (q.solution?'<div class="dsec"><div class="dsec-title">正解与解析</div><div class="dsec-body">'+esc(q.solution)+'</div></div>':'<div class="dsec"><div class="dsec-title">正解</div><div class="dsec-body">（未填写正解，可去编辑补上）</div></div>')+
+      (q.wrong?'<div class="dsec"><div class="dsec-title">你的错解</div><div class="dsec-body">'+esc(q.wrong)+'</div></div>':'')+
+      '</div>'+
+      '<div class="quiz-actions">'+
+        '<button class="btn btn-ok" onclick="sprintGrade(true)">✅ 答对</button>'+
+        '<button class="btn btn-danger" onclick="sprintGrade(false)">❌ 答错</button>'+
+      '</div>';
+  }else{
+    html+='<div class="quiz-actions"><button class="btn btn-primary" onclick="sprintReveal()">👀 查看答案</button></div>'+
+      '<p class="flash-tip">每题限时 '+SPRINT_SECS+' 秒，倒计时结束自动计为答错</p>';
+  }
+  $('sprintBody').innerHTML=html;
+}
+function sprintReveal(){sprintRevealed=true;sprintRender();}
+function sprintGrade(ok){
+  sprintClearTimer();
+  if(ok){sprintOk++;}else{sprintWrong.push(sprintList[sprintIdx]);}
+  sprintIdx++;
+  if(sprintIdx>=sprintList.length){
+    sprintResult();
+    return;
+  }
+  sprintRevealed=false;
+  sprintStartTimer();
+  sprintRender();
+}
+function sprintResult(){
+  var n=sprintList.length,ok=sprintOk,rate=Math.round(ok/n*100);
+  var emoji=rate>=90?'🏆':rate>=70?'💪':rate>=50?'📖':'⚠️';
+  var tier=rate>=90?'状态极佳，保持节奏！':rate>=70?'基础扎实，稳中求进！':rate>=50?'还需巩固，错题就是提分点！':'需要加练，建议系统复习错题！';
+  var subCnt={},chapCnt={},causeCnt={};
+  sprintWrong.forEach(function(q){
+    subCnt[q.subject]=(subCnt[q.subject]||0)+1;
+    if(q.chapter)chapCnt[q.chapter]=(chapCnt[q.chapter]||0)+1;
+    (q.causes||[]).forEach(function(c){if(c)causeCnt[c]=(causeCnt[c]||0)+1;});
+  });
+  function top(obj){var k=null,m=0;for(var x in obj){if(obj[x]>m){m=obj[x];k=x;}}return k?k+'（×'+m+'）':null;}
+  var adv=[];
+  if(sprintWrong.length){
+    var ts=top(subCnt),tc=top(chapCnt),tca=top(causeCnt);
+    if(ts)adv.push('最薄弱科目：'+ts);
+    if(tc)adv.push('最薄弱知识点：'+tc);
+    if(tca)adv.push('高频错因：'+tca);
+    adv.push('建议回看答错的 '+sprintWrong.length+' 题，并针对薄弱点再练一轮');
+  }else{
+    adv.push('全部答对，超棒！可提高要求：缩短单题用时或只测「难」题');
+  }
+  var html='<div class="quiz-head"><h3>⏱️ 冲刺自测 · 成绩单</h3><button class="close-x" onclick="closeSprint()">✕</button></div>'+
+    '<div class="quiz-done"><span class="em">'+emoji+'</span>'+
+    '<h3>'+ok+' / '+n+' 答对 · 正确率 '+rate+'%</h3>'+
+    '<p>'+tier+'</p>'+
+    '<div class="sprint-adv"><b>📌 建议</b>'+
+      adv.map(function(a){return '<div class="sprint-adv-item">· '+a+'</div>';}).join('')+
+    '</div>'+
+    '<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="startSprint()">🔁 再测一轮</button>'+
+    '<button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeSprint()">完成</button></div>';
+  $('sprintBody').innerHTML=html;
+  renderAll();
+}
+function closeSprint(){sprintClearTimer();$('sprintOverlay').classList.remove('show');}
+
 /* ============ 遗忘曲线复习模式（SM-2） ============ */
 var sm2List=[],sm2Idx=0,sm2Revealed=false,sm2Graded=false,sm2Done=0,sm2Miss=0;
+var sm2Linked={}; // 联排标记：qid -> true
+function startSmart(){
+  sm2List=smartQueue();
+  if(!sm2List.length){toast('今天没有可复习的题 🎉');return;}
+  sm2Linked={};
+  sm2List.forEach(function(q){
+    relatedQuestions(q).forEach(function(r){sm2Linked[r.id]=true;});
+  });
+  sm2Idx=0;sm2Done=0;sm2Miss=0;sm2Revealed=false;sm2Graded=false;
+  $('sm2Overlay').classList.add('show');
+  sm2Render();
+}
 function startSM2(){
   sm2List=sm2DueList();
   if(!sm2List.length){toast('今天没有到期的复习题 🎉');return;}
+  sm2Linked={};
   sm2Idx=0;sm2Done=0;sm2Miss=0;sm2Revealed=false;sm2Graded=false;
   $('sm2Overlay').classList.add('show');
   sm2Render();
@@ -1556,7 +4846,8 @@ function sm2Render(){
   var q=sm2List[sm2Idx],n=sm2List.length;
   var html='<div class="quiz-head"><h3>🧠 遗忘曲线复习</h3><button class="close-x" onclick="closeSM2()">✕</button></div>'+
     '<div class="quiz-prog"><i style="width:'+Math.round((sm2Idx+1)/n*100)+'%"></i></div>'+
-    '<div class="dsec"><div class="dsec-title">第 '+(sm2Idx+1)+' / '+n+' 题 · '+esc(q.subject)+' · '+esc(q.chapter||'未分类')+'</div></div>'+
+    '<div class="dsec"><div class="dsec-title">第 '+(sm2Idx+1)+' / '+n+' 题 · '+esc(q.subject)+' · '+esc(q.chapter||'未分类')+
+    (sm2Linked[q.id]?' <span class="chip-link">🔗 关联联排</span>':'')+'</div></div>'+
     '<div class="quiz-q">'+esc(q.stem)+'</div>'+
     (q.img?'<img class="qimg-detail" src="'+q.img+'" alt="题目截图" style="margin-bottom:12px">':'')+
     '<div style="font-size:12.5px;color:var(--text3)">先回忆作答，再看正解并自评。</div>';
@@ -1655,12 +4946,27 @@ function flashNext(){
   flashRevealed=false;
   flashRender();
 }
+/* 自动精进#8：速记上一张（触控右滑 / 键盘 ←） */
+function flashPrev(){
+  if(!flashList.length){toast('还没有可速记的错题');return;}
+  var back=flashIdx;
+  if(back>=flashList.length)back=flashList.length-1;
+  else back--;
+  if(back<0)back=0;
+  if(back===flashIdx){toast('已是第一张');return;}
+  flashIdx=back;
+  flashRevealed=false;
+  flashRender();
+}
 function closeFlash(){$('flashOverlay').classList.remove('show');}
 document.addEventListener('keydown',function(e){
   if(!$('flashOverlay').classList.contains('show'))return;
   if(e.key===' '||e.key==='ArrowRight'){
     e.preventDefault();
     if(!flashRevealed)flashReveal();else flashNext();
+  }else if(e.key==='ArrowLeft'){
+    e.preventDefault();
+    flashPrev();
   }
 });
 
@@ -1681,10 +4987,25 @@ function weeklyReport(){
   lines.push('📚 本周学习周报 · '+d1+' - '+d2);
   lines.push('━━━━━━━━━━━━');
   lines.push('✍️ 本周录入错题 '+added+' 道（累计 '+n+' 道）');
-  lines.push('🔥 复习打卡 '+checkWeek+' 天 · 连续 '+streakDays()+' 天');
+  var reviewWeek=checkWeek;
+  state.questions.forEach(function(q){(q.reviews||[]).forEach(function(r){if(r.done&&r.done>=ws&&r.done<=we)reviewWeek++;});});
+  lines.push('🔥 本周复习 '+reviewWeek+' 次（含打卡 '+checkWeek+' 天）· 连续 '+streakDays()+' 天');
   lines.push('🎯 本周新掌握 '+newMastered+' 道 · 总掌握率 '+rate+'%');
   var weak=chapterStats().filter(function(r){return r.rate<100;}).sort(function(a,b){return a.rate-b.rate;})[0];
   if(weak)lines.push('📉 最薄弱知识点：'+weak.name+'（掌握率 '+weak.rate+'%）');
+  // 各科目本周动态
+  var subs=allSubjects();
+  if(subs.length>1){
+    lines.push('📚 科目速览');
+    subs.forEach(function(s){
+      var qs=state.questions.filter(function(q){return q.subject===s;});
+      if(!qs.length)return;
+      var addedS=qs.filter(function(q){return q.createdAt>=ws&&q.createdAt<=we;}).length;
+      var mS=qs.filter(function(q){return q.mastered;}).length;
+      var rateS=Math.round(mS/qs.length*100);
+      lines.push('  · '+s+'：累计 '+qs.length+' 题，本周新增 '+addedS+'，掌握率 '+rateS+'%');
+    });
+  }
   var top=causeDist().sort(function(a,b){return b.n-a.n;}).slice(0,2).map(function(d){return d.name;});
   if(top.length)lines.push('💡 高频错因：'+top.join('、'));
   lines.push('━━━━━━━━━━━━');
@@ -1720,6 +5041,82 @@ function copyWeekly(){
 }
 
 /* ============ 统计 ============ */
+function renderDash(){
+  var total=state.questions.length;
+  var mastered=state.questions.filter(function(q){return q.mastered;}).length;
+  var pct=total?Math.round(mastered/total*100):0;
+  // 大环形图
+  var cv=$('dashRing');
+  if(cv){
+    var ctx=cv.getContext('2d'),W=cv.width,H=cv.height,cx=W/2,cy=H/2,R=92,line=20;
+    ctx.clearRect(0,0,W,H);
+    ctx.lineWidth=line;ctx.lineCap='round';
+    ctx.strokeStyle=cssVar('--track')||'#eceef8';
+    ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.stroke();
+    if(pct>0){
+      var g=ctx.createLinearGradient(0,0,W,H);
+      g.addColorStop(0,cssVar('--pri')||'#5b6cff');
+      g.addColorStop(1,cssVar('--pri2')||'#8b5cf6');
+      ctx.strokeStyle=g;
+      ctx.beginPath();ctx.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+pct/100*Math.PI*2);ctx.stroke();
+    }
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=cssVar('--canvas-text')||'#1e2233';
+    ctx.font='bold 52px sans-serif';
+    ctx.fillText(pct+'%',cx,cy-8);
+    ctx.font='22px sans-serif';
+    ctx.fillStyle=cssVar('--canvas-sub')||'#9aa0b5';
+    ctx.fillText('已掌握',cx,cy+30);
+  }
+  $('dashRate').textContent=pct+'%';
+  $('dashRateSub').textContent='共 '+total+' 题 · 已掌握 '+mastered+' 题 · 复习中 '+(total-mastered)+' 题';
+  var dots=allSubjects().map(function(s){
+    var qs=state.questions.filter(function(q){return q.subject===s;});
+    var m=qs.filter(function(q){return q.mastered;}).length;
+    var p=qs.length?Math.round(m/qs.length*100):0;
+    return '<span class="dash-dot"><i style="background:'+(p>=80?'var(--ok)':(p>=40?'var(--warn)':'var(--danger)'))+'"></i>'+esc(s)+' '+p+'%</span>';
+  }).join('');
+  $('dashDots').innerHTML=dots||'<span class="dash-dot">暂无数据</span>';
+  // 做题量趋势（近 8 周，复用周聚合逻辑）
+  var box=$('dashTrend');
+  var counts={};
+  state.questions.forEach(function(q){if(q.createdAt){var w=weekStart(q.createdAt);counts[w]=(counts[w]||0)+1;}});
+  var WEEKS=8,end=weekStart(today()),start=addDays(end,-7*(WEEKS-1));
+  var labels=[],nums=[],cur=start;
+  for(var i=0;i<WEEKS;i++){labels.push(cur);nums.push(counts[cur]||0);cur=addDays(cur,7);}
+  var max=1;nums.forEach(function(n){if(n>max)max=n;});
+  if(!total){box.innerHTML='<div class="empty"><span class="em">📈</span>暂无数据</div>';$('dashTrendLegend').innerHTML='';}
+  else{
+    var W=box.clientWidth||340,H=110,PAD=12,step=(W-2*PAD)/(WEEKS-1),pts=[];
+    for(var i=0;i<WEEKS;i++){
+      var x=PAD+step*i,y=H-PAD-Math.round((nums[i]/max)*(H-2*PAD-14));
+      pts.push({x:x,y:y});
+    }
+    var html='';
+    for(var i=0;i<WEEKS;i++){
+      html+='<span class="t-label" style="left:'+pts[i].x+'px;top:'+(H-14)+'px;font-size:9px">'+labels[i].slice(5).replace('-','/')+'</span>';
+      if(i<WEEKS-1){
+        var dx=pts[i+1].x-pts[i].x,dy=pts[i+1].y-pts[i].y;
+        var len=Math.sqrt(dx*dx+dy*dy),ang=Math.atan2(dy,dx)*180/Math.PI;
+        html+='<span class="t-line" style="left:'+pts[i].x+'px;top:'+pts[i].y+'px;width:'+len+'px;transform:rotate('+ang+'deg)"></span>';
+      }
+      html+='<span class="t-dot" style="left:'+(pts[i].x-3)+'px;top:'+(pts[i].y-3)+'px"></span>';
+    }
+    box.innerHTML=html;
+    $('dashTrendLegend').innerHTML='峰值 '+max+' 题 / 周 · 本周 '+nums[WEEKS-1]+' 题';
+  }
+  // 错因分布总览
+  var dist=causeDist();
+  var dmax=1;dist.forEach(function(d){if(d.n>dmax)dmax=d.n;});
+  $('dashCauses').innerHTML=dist.length?dist.map(function(d){
+    var w=Math.max(3,Math.round(d.n/dmax*100));
+    return '<div class="cbar-row"><div class="cbar-label"><span>'+esc(d.name)+'</span><b>'+d.n+' 次</b></div>'+
+      '<div class="cbar"><div class="cbar-fill" style="width:'+w+'%;background:'+d.color+'"></div></div></div>';
+  }).join(''):'<div class="empty"><span class="em">📭</span>暂无错因数据</div>';
+  $('dashCauseLegend').innerHTML=dist.map(function(d){
+    return '<span><i style="background:'+d.color+'"></i>'+esc(d.name)+' · '+Math.round(d.n/(dist.reduce(function(a,b){return a+b.n;},0)||1)*100)+'%</span>';
+  }).join('');
+}
 function renderStats(){
   var total=state.questions.length;
   var mastered=state.questions.filter(function(q){return q.mastered;}).length;
@@ -1728,12 +5125,18 @@ function renderStats(){
   $('stMastered').textContent=mastered;
   $('stRate').textContent=total?Math.round(mastered/total*100)+'%':'0%';
   $('stPending').textContent=pending;
+  renderDash();
   drawSubjectDonuts();
   renderCauseBars();
+  renderCauseTrend();
+  renderDiffBars();
+  renderTypeBars();
+  renderStarBars();
   renderHeat30();
   renderCauseAdvice();
   renderTrendChart();
   renderWeakReport();
+  renderWeekBars();
 }
 /* 周趋势折线图：按周一所在日期聚合每周录入量，纯 CSS 点+连线 */
 function weekStart(ds){
@@ -1853,21 +5256,115 @@ function renderCauseBars(){
       '<div class="cbar"><div class="cbar-fill" style="width:'+w+'%;background:'+d.color+'"></div></div></div>';
   }).join(''):'<div class="empty"><span class="em">📭</span>暂无错因数据</div>';
 }
+/* 错因趋势：近 6 个月各错因题数占比（堆叠柱） */
+function monthKey(ds){return (ds||'').slice(0,7);}
+function renderCauseTrend(){
+  var box=$('causeTrend');
+  var order=allCauses();
+  var MONTHS=6;
+  var ms=[],cur=new Date();
+  cur.setDate(1);
+  for(var i=MONTHS-1;i>=0;i--){
+    var d=new Date(cur);d.setMonth(cur.getMonth()-i);
+    ms.push(d.getFullYear()+'-'+((d.getMonth()+1)<10?'0':'')+(d.getMonth()+1));
+  }
+  var order=allCauses();
+  if(!order.length){
+    box.innerHTML='<div class="empty"><span class="em">📭</span>暂无错因数据</div>';
+    $('causeTrendLegend').innerHTML='';
+    return;
+  }
+  var data=ms.map(function(m){var o={};order.forEach(function(c){o[c]=0;});return o;});
+  state.questions.forEach(function(q){
+    var m=monthKey(q.createdAt),idx=ms.indexOf(m);
+    if(idx<0)return;
+    (q.causes||[]).forEach(function(c){if(order.indexOf(c)>=0)data[idx][c]++;});
+  });
+  var max=1;data.forEach(function(o){var t=0;for(var k in o)t+=o[k];if(t>max)max=t;});
+  box.innerHTML=ms.map(function(m,i){
+    var segs=order.map(function(c,j){
+      var h=Math.round(data[i][c]/max*96);
+      return h?'<div class="ctrend-seg" style="height:'+h+'px;background:'+CAUSE_COLORS[j%CAUSE_COLORS.length]+'"></div>':'';
+    }).join('');
+    return '<div class="ctrend-col"><div class="ctrend-stack">'+segs+'</div>'+
+      '<div class="ctrend-label">'+m.slice(2).replace('-','/')+'</div></div>';
+  }).join('');
+  var legend=order.map(function(c,i){
+    return '<span><i style="background:'+CAUSE_COLORS[i%CAUSE_COLORS.length]+'"></i>'+esc(c)+'</span>';
+  }).join('');
+  $('causeTrendLegend').innerHTML=legend;
+}
 function renderHeat30(){
   var labels=['日','一','二','三','四','五','六'];
   var start=addDays(today(),-29);
   var startDow=new Date(start+'T00:00:00').getDay();
+  // 每天复习强度 = 打卡次数 + 各题艾宾浩斯节点完成次数
+  var cnt={};
+  state.checkins.forEach(function(c){cnt[c]=(cnt[c]||0)+1;});
+  state.questions.forEach(function(q){
+    (q.reviews||[]).forEach(function(r){if(r.done)cnt[r.done]=(cnt[r.done]||0)+1;});
+  });
   var cells=[];
   for(var k=0;k<startDow;k++)cells.push('<div class="heat-cell"></div>');
   for(var i=0;i<30;i++){
     var ds=addDays(start,i);
     var d=new Date(ds+'T00:00:00');
-    var on=state.checkins.indexOf(ds)>=0;
+    var n=cnt[ds]||0;
+    var cls='';
+    if(n>0)cls=' on l'+(n>=4?3:(n>=2?2:1));
     var isT=ds===today();
-    cells.push('<div class="heat-cell"><div class="heat-dot'+(on?' on':'')+(isT?' today':'')+'">'+d.getDate()+'</div><span>'+labels[d.getDay()]+'</span></div>');
+    cells.push('<div class="heat-cell"><div class="heat-dot'+cls+(isT?' today':'')+'"'+
+      (n?' title="'+ds+' 复习 '+n+' 次"':'')+'">'+d.getDate()+'</div><span>'+labels[d.getDay()]+'</span></div>');
   }
   $('heat30').innerHTML=cells.join('');
-  $('streakText').textContent='当前连续打卡 '+streakDays()+' 天，累计打卡 '+state.checkins.length+' 天。';
+  var doneT=state.checkins.indexOf(today())>=0;
+  $('streakText').textContent='当前连续打卡 '+streakDays()+' 天 · 历史最佳 '+bestStreak()+' 天 · 累计打卡 '+state.checkins.length+' 天'+(doneT?' · 今日已打卡 ✅':' · 今日还未打卡')+' · 色块越深代表当天复习次数越多。';
+}
+/* ============ 自动精进#1：近 7 天复习量柱状图 ============ */
+function renderWeekBars(){
+  var box=$('weekBars');
+  if(!box)return;
+  var cnt={};
+  state.checkins.forEach(function(c){cnt[c]=(cnt[c]||0)+1;});
+  state.questions.forEach(function(q){
+    (q.reviews||[]).forEach(function(r){if(r.done)cnt[r.done]=(cnt[r.done]||0)+1;});
+  });
+  var days=[],max=1,total=0;
+  for(var i=6;i>=0;i--){
+    var ds=addDays(today(),-i);
+    var n=cnt[ds]||0;
+    total+=n;if(n>max)max=n;
+    days.push({ds:ds,n:n});
+  }
+  if(!total){
+    box.innerHTML='<div class="empty"><span class="em">📭</span>近 7 天还没有复习记录，去首页开始复习吧</div>';
+    return;
+  }
+  var labels=['日','一','二','三','四','五','六'];
+  box.innerHTML='<div class="week-bars">'+days.map(function(d){
+    var dt=new Date(d.ds+'T00:00:00');
+    var h=d.n?Math.max(6,Math.round(d.n/max*100)):4;
+    return '<div class="week-bar'+(d.ds===today()?' today':'')+'">'+
+      '<div class="wb-track">'+
+      '<div class="wb-n">'+(d.n||'')+'</div>'+
+      '<div class="wb-col'+(d.n?'':' zero')+'" style="height:'+h+'%" title="'+d.ds+' · 复习 '+d.n+' 次"></div>'+
+      '</div>'+
+      '<div class="wb-d">'+(d.ds===today()?'今':labels[dt.getDay()])+'</div></div>';
+  }).join('')+'</div>'+
+    '<p class="help" style="margin:8px 0 0">本周共复习 <b>'+total+'</b> 次 · 日均 '+(total/7).toFixed(1)+' 次'+(max>1?' · 峰值日 '+max+' 次':'')+'</p>';
+}
+/* ============ 自动精进#1：题干字体大小可调节 ============ */
+function applyStemFont(){
+  var fs=state.fontSize||14.5;
+  document.documentElement.style.setProperty('--stem-size',fs+'px');
+}
+function stemFont(d){
+  var fs=(state.fontSize||14.5)+d;
+  if(fs<12||fs>20){toast('题干字号范围 12~20px');return;}
+  state.fontSize=fs;
+  save();
+  applyStemFont();
+  toast('题干字号已设为 '+fs+'px');
 }
 function causeDist(){
   var order=allCauses();
@@ -1876,6 +5373,42 @@ function causeDist(){
   return order.map(function(c,i){
     return {name:c,n:map[c]||0,color:CAUSE_COLORS[i%CAUSE_COLORS.length]};
   }).filter(function(d){return d.n>0;});
+}
+
+/* ============ 难度 / 题型分布 ============ */
+var DIFFS=['易','中','难'];
+var DIFF_COLORS={'易':'#10b981','中':'#f59e0b','难':'#ef4444'};
+var DEF_TYPES=['选择题','填空题','解答题','计算题','其他'];
+function qDiff(q){return DIFFS.indexOf(q.diff)>=0?q.diff:'中';}
+function qType(q){return (q.qtype&&DEF_TYPES.indexOf(q.qtype)>=0)?q.qtype:'其他';}
+function renderBars(el,items,max,unit){
+  el.innerHTML=items.length?items.map(function(d){
+    var w=Math.max(3,Math.round(d.n/max*100));
+    return '<div class="cbar-row"><div class="cbar-label"><span>'+esc(d.name)+'</span><b>'+d.n+' '+unit+'</b></div>'+
+      '<div class="cbar"><div class="cbar-fill" style="width:'+w+'%;background:'+d.color+'"></div></div></div>';
+  }).join(''):'<div class="empty"><span class="em">📭</span>暂无数据</div>';
+}
+function renderDiffBars(){
+  var items=DIFFS.map(function(d){return {name:'难度 · '+d,n:state.questions.filter(function(q){return qDiff(q)===d;}).length,color:DIFF_COLORS[d]};}).filter(function(d){return d.n>0;});
+  var max=1;items.forEach(function(d){if(d.n>max)max=d.n;});
+  renderBars($('diffBars'),items,max,'题');
+}
+function renderTypeBars(){
+  var map={};
+  state.questions.forEach(function(q){var t=qType(q);map[t]=(map[t]||0)+1;});
+  var items=Object.keys(map).map(function(t,i){return {name:t,n:map[t],color:CAUSE_COLORS[(DEF_TYPES.indexOf(t)>=0?DEF_TYPES.indexOf(t):DEF_TYPES.length-1)%CAUSE_COLORS.length]};})
+    .sort(function(a,b){return b.n-a.n;});
+  var max=1;items.forEach(function(d){if(d.n>max)max=d.n;});
+  renderBars($('typeBars'),items,max,'题');
+}
+/* 自动精进#10：星级分布（1-5 星，按掌握度评分） */
+var STAR_COLORS=['#d8dde5','#c7cfdc','#fbbf24','#f59e0b','#f97316'];
+function renderStarBars(){
+  var cnt=[0,0,0,0,0];
+  state.questions.forEach(function(q){cnt[Math.max(1,Math.min(5,q.stars||3))-1]++;});
+  var items=[1,2,3,4,5].map(function(i){return {name:starHtml(i)+' '+i+' 星',n:cnt[i-1],color:STAR_COLORS[i-1]};});
+  var max=1;items.forEach(function(d){if(d.n>max)max=d.n;});
+  renderBars($('starBars'),items,max,'题');
 }
 
 /* ============ 薄弱知识点报告 ============ */
@@ -1920,9 +5453,23 @@ function renderWeakReport(){
 
 /* ============ 设置 ============ */
 function renderSettings(){
+  var p=plan();
+  $('planExam').value=p.examDate||'';
+  $('planDaily').value=p.daily||10;
+  var r=state.remind||{on:false,time:'20:00',last:''};
+  $('remindOn').checked=!!r.on;
+  $('remindTime').value=r.time||'20:00';
+  var st=$('remindStatus');
+  if(st)st.innerHTML=r.on?'🟢 当前已开启 · 每日 '+esc(r.time||'20:00')+' 提醒':'⚪ 当前已关闭';
+  var hb=state.handbook||{name:'',date:''};
+  $('hbName').value=hb.name||'';
+  $('hbDate').value=hb.date||'';
   $('subjList').innerHTML=state.subjects.map(function(s){
     var n=state.questions.filter(function(q){return q.subject===s;}).length;
-    return '<div class="set-row"><span class="nm">'+esc(s)+'</span><span class="cnt">'+n+' 题</span>'+
+    var c=subjColor(s);
+    return '<div class="set-row"><span class="nm"><i class="subj-dot" style="background:'+c+'"></i>'+esc(s)+'</span>'+
+      '<input type="color" value="'+c+'" title="自定义科目颜色" style="width:26px;height:26px;border:none;background:none;padding:0;cursor:pointer" onchange="setSubjectColor(\''+esc(s).replace(/'/g,'&#39;')+'\',this.value)">'+
+      '<span class="cnt">'+n+' 题</span>'+
       '<button class="del-x" data-name="'+esc(s)+'" onclick="removeSubject(this.dataset.name)">✕</button></div>';
   }).join('')||'<div class="set-row"><span class="nm" style="color:var(--text3)">暂无科目</span></div>';
   $('causeList').innerHTML=state.causes.map(function(c){
@@ -1944,6 +5491,24 @@ function removeSubject(name){
   state.subjects=state.subjects.filter(function(s){return s!==name;});
   save();renderSettings();toast('已删除科目');
 }
+/* 自动精进#7：复习手册封面信息 */
+function saveHandbook(){
+  state.handbook=state.handbook||{name:'',date:''};
+  state.handbook.name=$('hbName').value.trim();
+  state.handbook.date=$('hbDate').value;
+  save();
+  toast('已保存复习手册封面信息');
+}
+/* 自动精进#4：科目自定义颜色 */
+function setSubjectColor(name,val){
+  if(!name||!val)return;
+  state.subjectColors=state.subjectColors||{};
+  state.subjectColors[name]=val;
+  save();
+  renderSettings();
+  renderAll();
+  toast('已更新「'+name+'」颜色标记');
+}
 function addCause(){
   var v=$('newCauseName').value.trim();
   if(!v){toast('请输入错因名称');return;}
@@ -1957,10 +5522,53 @@ function removeCause(name){
   save();renderSettings();toast('已删除错因');
 }
 
+/* ============ 复习提醒（页内通知） ============ */
+function saveReminder(){
+  state.remind=state.remind||{on:false,time:'20:00',last:''};
+  state.remind.on=!!$('remindOn').checked;
+  state.remind.time=$('remindTime').value||'20:00';
+  save();
+  toast(state.remind.on?'已开启复习提醒（每日 '+state.remind.time+'）':'已关闭复习提醒');
+}
+function remindDueCount(){
+  var due=0;
+  state.questions.forEach(function(q){
+    if(q.mastered)return;
+    if(dueNodes(q).length)due++;
+  });
+  return due;
+}
+function showReminder(){
+  var b=$('remindBanner');
+  if(!b)return;
+  var r=state.remind||{on:false,time:'20:00',last:''};
+  $('remindDue').textContent=remindDueCount();
+  $('remindTimeTag').textContent=r.time||'20:00';
+  b.classList.add('show');
+}
+function hideReminder(){$('remindBanner').classList.remove('show');}
+function checkReminder(){
+  var r=state.remind||{on:false,time:'20:00',last:''};
+  if(!r.on||!r.time)return;
+  var now=new Date();
+  var pad=function(n){return (n<10?'0':'')+n;};
+  var hm=pad(now.getHours())+':'+pad(now.getMinutes());
+  var todayStr=fmt(now);
+  if(hm>=r.time&&r.last!==todayStr){
+    r.last=todayStr;
+    save();
+    showReminder();
+  }
+}
+function testReminder(){
+  showReminder();
+  toast('🔔 提醒横幅已弹出（测试）');
+}
+
 /* ============ 导出 / 导入 ============ */
 function exportData(){
-  var data={app:'kaoyan-cuotiben',version:10,exportedAt:new Date().toISOString(),
-    subjects:state.subjects,causes:state.causes,questions:state.questions,checkins:state.checkins};
+  var data={app:'kaoyan-cuotiben',version:33,exportedAt:new Date().toISOString(),
+    subjects:state.subjects,causes:state.causes,questions:state.questions,checkins:state.checkins,subjectColors:state.subjectColors};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   var a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -1968,6 +5576,182 @@ function exportData(){
   document.body.appendChild(a);a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},300);
   toast('已导出备份文件');
+}
+/* ============ 二维码导出 / 扫码导入（同设备迁移） ============ */
+function exportQr(){
+  var data={app:'kaoyan-cuotiben',version:33,exportedAt:new Date().toISOString(),
+    subjects:state.subjects,causes:state.causes,questions:state.questions,checkins:state.checkins,subjectColors:state.subjectColors};
+  var text=JSON.stringify(data);
+  var bytes=utf8Bytes(text);
+  if(bytes>2800){
+    toast('数据约 '+bytes+' 字节，超过二维码容量上限（约 2800 字节），请改用 JSON 导出');
+    return;
+  }
+  $('qrBody').innerHTML=
+    '<div class="sheet-head"><h3>🔳 导出二维码</h3><button class="close-x" onclick="closeQr()">✕</button></div>'+
+    '<div class="qr-box"><canvas id="qrCanvas" width="320" height="320"></canvas></div>'+
+    '<p class="share-tip">用另一台设备打开本应用 → 设置 → 数据备份 →「📷 扫码导入」扫码即可合并数据<br>数据 '+bytes+' 字节 · 同设备迁移，不上传任何服务器</p>';
+  $('qrOverlay').classList.add('show');
+  try{
+    qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8'];
+    var qr=qrcode(0,'L');
+    qr.addData(text,'Byte');
+    qr.make();
+  }catch(e){
+    toast('二维码生成失败：数据超出容量，请改用 JSON 导出');
+    return;
+  }
+  var cv=$('qrCanvas'),ctx=cv.getContext('2d');
+  var n=qr.getModuleCount(),scale=Math.max(1,Math.floor(300/(n+8)));
+  var size=scale*(n+8),ox=Math.floor((320-size)/2),oy=ox;
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,320,320);
+  ctx.fillStyle='#111827';
+  for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(qr.isDark(r,c))ctx.fillRect(ox+(c+4)*scale,oy+(r+4)*scale,scale,scale);
+}
+function utf8Bytes(s){
+  var n=0;
+  for(var i=0;i<s.length;i++){
+    var c=s.charCodeAt(i);
+    if(c<0x80)n+=1;
+    else if(c<0x800)n+=2;
+    else if(c>=0xD800&&c<0xDC00){i++;n+=4;}
+    else n+=3;
+  }
+  return n;
+}
+function closeQr(){
+  stopScan();
+  $('qrOverlay').classList.remove('show');
+}
+var scanStream=null,scanRaf=null,scanDetector=null;
+function scanQr(){
+  if(!('BarcodeDetector' in window)){
+    toast('当前浏览器不支持扫码识别，请使用 Chrome / Edge，或改用 JSON 导入');
+    return;
+  }
+  $('qrBody').innerHTML=
+    '<div class="sheet-head"><h3>📷 扫码导入</h3><button class="close-x" onclick="closeQr()">✕</button></div>'+
+    '<div class="qr-video"><video id="qrVideo" playsinline muted></video></div>'+
+    '<p class="share-tip">将另一台设备上的「🔳 导出二维码」对准摄像头<br>识别成功后自动导入并合并（按题干去重）</p>';
+  $('qrOverlay').classList.add('show');
+  var video=$('qrVideo');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    toast('无法访问摄像头（需要 HTTPS 或 localhost）');
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+    scanStream=stream;
+    video.srcObject=stream;
+    video.play();
+    try{scanDetector=new BarcodeDetector({formats:['qr_code']});}catch(e){scanDetector=null;}
+    if(!scanDetector){toast('BarcodeDetector 不可用');stopScan();return;}
+    scanLoop();
+  }).catch(function(){toast('无法打开摄像头（可能被拒绝）');});
+}
+function scanLoop(){
+  if(!scanDetector||!scanStream)return;
+  scanDetector.detect($('qrVideo')).then(function(codes){
+    if(codes&&codes.length){handleQrData(codes[0].rawValue);return;}
+    scanRaf=requestAnimationFrame(scanLoop);
+  }).catch(function(){scanRaf=requestAnimationFrame(scanLoop);});
+}
+function stopScan(){
+  if(scanRaf){cancelAnimationFrame(scanRaf);scanRaf=null;}
+  if(scanStream){try{scanStream.getTracks().forEach(function(t){t.stop();});}catch(e){}scanStream=null;}
+  scanDetector=null;
+}
+function handleQrData(text){
+  stopScan();
+  var d=null;
+  try{d=JSON.parse(text);}catch(e){toast('二维码内容不是有效数据');return;}
+  if(!d||!Array.isArray(d.questions)){toast('二维码内容格式不正确');return;}
+  if(state.questions.length&&!confirm('导入将合并到现有数据（按题干去重），确定继续吗？')){
+    closeQr();return;
+  }
+  var added=0,skipped=0;
+  (d.subjects||[]).forEach(function(s){if(s&&state.subjects.indexOf(s)<0)state.subjects.push(s);});
+  if(d.subjectColors&&typeof d.subjectColors==='object')state.subjectColors=Object.assign({},state.subjectColors||{},d.subjectColors);
+  (d.causes||[]).forEach(function(c){if(c&&state.causes.indexOf(c)<0)state.causes.push(c);});
+  (d.questions||[]).forEach(function(q){
+    if(!q)return;
+    var stemKey=(q.stem||'').replace(/\s+/g,'');
+    var dup=state.questions.some(function(x){
+      return (x.id&&q.id&&x.id===q.id)||(stemKey&&(x.stem||'').replace(/\s+/g,'')===stemKey);
+    });
+    if(dup){skipped++;return;}
+    if(!Array.isArray(q.reviews))q.reviews=INTERVALS.map(function(n){return {day:n,due:addDays(q.createdAt||today(),n),done:null};});
+    if(!Array.isArray(q.causes))q.causes=[];
+    state.questions.push(q);added++;
+  });
+  (d.checkins||[]).forEach(function(c){if(state.checkins.indexOf(c)<0)state.checkins.push(c);});
+  save();renderAll();
+  toast('扫码导入成功：新增 '+added+' 题'+(skipped?'，跳过重复 '+skipped+' 题':'')+'，共 '+state.questions.length+' 题');
+  closeQr();
+}
+function onBatchSubjectChange(){
+  $('batchNewSubjectWrap').classList.toggle('hide',$('batchSubject').value!=='__new__');
+  if($('batchSubject').value==='__new__')$('batchNewSubject').focus();
+}
+/* 解析批量文本：每行一条「题干 | 答案 | 解析」（Tab 亦可，解析可空，#或//开头为注释） */
+function parseBatchText(text){
+  var items=[],errors=[];
+  String(text||'').split(/\r?\n/).forEach(function(line,idx){
+    var s=line.trim();
+    if(!s||/^#/.test(s)||/^\/\//.test(s))return;
+    var parts=s.split(/\t|\|/).map(function(p){return p.trim();});
+    var stem=parts[0]||'';
+    if(!stem){errors.push('第 '+(idx+1)+' 行缺少题干');return;}
+    items.push({stem:stem,solution:parts[1]||'',note:parts[2]||''});
+  });
+  return {items:items,errors:errors};
+}
+function previewBatch(){
+  var r=parseBatchText($('batchText').value);
+  var box=$('batchPreview');
+  if(!r.items.length){
+    box.innerHTML='<div class="empty"><span class="em">📋</span>未解析到有效题目：每行一条「题干 | 答案 | 解析」</div>';
+    box.classList.remove('hide');
+    return;
+  }
+  var html='<div class="batch-pv"><b>解析到 '+r.items.length+' 条'+(r.errors.length?'，'+r.errors.length+' 行有误':'')+'</b>';
+  if(r.errors.length)html+='<div class="batch-err">'+r.errors.map(esc).join('<br>')+'</div>';
+  html+='<div class="batch-list">'+r.items.slice(0,5).map(function(it){
+    return '<div class="batch-item"><span>'+esc(it.stem.length>30?it.stem.slice(0,30)+'…':it.stem)+'</span>'+
+      (it.solution?'<i>答案：'+esc(it.solution.length>20?it.solution.slice(0,20)+'…':it.solution)+'</i>':'')+'</div>';
+  }).join('')+'</div>';
+  if(r.items.length>5)html+='<p class="plan-hint">… 共 '+r.items.length+' 条，导入时会全部录入</p>';
+  html+='</div>';
+  box.innerHTML=html;
+  box.classList.remove('hide');
+}
+function importBatch(){
+  var r=parseBatchText($('batchText').value);
+  if(!r.items.length){toast('没有可导入的题目，请检查格式');return;}
+  var subject=$('batchSubject').value;
+  if(subject==='__new__')subject=$('batchNewSubject').value.trim();
+  if(!subject){toast('请选择或填写科目');return;}
+  if(state.subjects.indexOf(subject)<0)state.subjects.push(subject);
+  var chapter=$('batchChapter').value.trim();
+  var qtype=qType({qtype:$('batchType').value});
+  var diff=qDiff({diff:$('batchDiff').value});
+  var added=0,skipped=0;
+  r.items.forEach(function(it){
+    var stemKey=it.stem.replace(/\s+/g,'');
+    var dup=state.questions.some(function(x){return (x.stem||'').replace(/\s+/g,'')===stemKey;});
+    if(dup){skipped++;return;}
+    state.questions.unshift({
+      id:uid(),subject:subject,chapter:chapter,stem:it.stem,wrong:'',causes:[],
+      solution:it.solution,note:it.note,img:'',qtype:qtype,diff:diff,
+      mastered:false,createdAt:today(),masteredAt:null,
+      reviews:INTERVALS.map(function(n){return {day:n,due:addDays(today(),n),done:null};}),
+      sm2:{ef:2.5,interval:0,reps:0,next:null,lastGrade:null}
+    });
+    added++;
+  });
+  save();renderAll();
+  $('batchText').value='';
+  $('batchPreview').classList.add('hide');
+  toast('批量导入：新增 '+added+' 题'+(skipped?'，跳过重复 '+skipped+' 题':'')+' ✅');
 }
 function importFile(input){
   var f=input.files[0];
@@ -1981,6 +5765,7 @@ function importFile(input){
         input.value='';return;
       }
       (d.subjects||[]).forEach(function(s){if(s&&state.subjects.indexOf(s)<0)state.subjects.push(s);});
+      if(d.subjectColors&&typeof d.subjectColors==='object')state.subjectColors=Object.assign({},state.subjectColors||{},d.subjectColors);
       (d.causes||[]).forEach(function(c){if(c&&state.causes.indexOf(c)<0)state.causes.push(c);});
       var added=0,skipped=0;
       (d.questions||[]).forEach(function(q){
@@ -2009,10 +5794,12 @@ function loadDemo(){
   var t=today();
   function mk(subject,chapter,stem,wrong,causes,solution,daysAgo,doneDays){
     var c=addDays(t,-daysAgo);
-    return {id:uid(),subject:subject,chapter:chapter,stem:stem,wrong:wrong,causes:causes,
-      solution:solution,note:'示例数据（可在设置中清空）',mastered:false,
-      createdAt:c,masteredAt:null,
-      reviews:INTERVALS.map(function(n){return {day:n,due:addDays(c,n),done:doneDays.indexOf(n)>=0?addDays(c,n):null};})};
+    var cs=Array.isArray(causes)?causes:((causes&&[causes])||[]);
+    return {id:uid(),subject:subject,chapter:chapter,stem:stem,wrong:wrong,causes:cs,
+      solution:solution,note:'示例数据（可在设置中清空）',qtype:'选择题',diff:'中',
+      mastered:false,createdAt:c,masteredAt:null,
+      reviews:INTERVALS.map(function(n){return {day:n,due:addDays(c,n),done:doneDays.indexOf(n)>=0?addDays(c,n):null};}),
+      sm2:{ef:2.5,interval:0,reps:0,next:null,lastGrade:null}};
   }
   state.questions.push(
     mk('数学二','极限','lim(x→0) (1-cosx)/x² = ?','直接代入得 0','知识点不熟','等价无穷小：1-cosx ~ x²/2，故原极限 = 1/2。',1,[]),
@@ -2034,15 +5821,108 @@ function clearAll(){
 
 /* ============ 渲染入口 ============ */
 function renderAll(){
+  applyStemFont();
   renderTop();
   renderHome();
   renderList();
   renderStats();
   renderSettings();
 }
+/* ============ PWA：Service Worker 注册 + 安装提示 ============ */
+var deferredPrompt=null;
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW 注册失败',e);});
+  });
+}
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  deferredPrompt=e;
+  var b=$('installBtn');
+  if(b)b.classList.remove('hide');
+});
+window.addEventListener('appinstalled',function(){
+  deferredPrompt=null;
+  var b=$('installBtn');
+  if(b)b.classList.add('hide');
+  toast('已安装到主屏幕 🎉');
+});
+function installPwa(){
+  if(!deferredPrompt){toast('当前浏览器暂不支持直接安装，请通过 http(s) 访问后重试');return;}
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(function(){
+    deferredPrompt=null;
+    var b=$('installBtn');
+    if(b)b.classList.add('hide');
+  });
+}
+function pwaInfo(){
+  toast('http(s) 访问时可安装到主屏幕；文件方式打开同样完全离线可用');
+}
 initTheme();
 renderAll();
 window.addEventListener('resize',resizeStats);
+setInterval(checkReminder,30000);
+checkReminder();
+
+/* ============ 自动精进#8：触控滑动体验 ============ */
+var VIEW_ORDER=['home','list','stats','settings'];
+var SWIPE_DX=64,SHEET_PULL=96;
+var OVERLAY_CLOSE={overlay:closeDetail,quizOverlay:closeQuiz,shareOverlay:closeShare,sm2Overlay:closeSM2,flashOverlay:closeFlash,sprintOverlay:closeSprint};
+var touchTrack=null;
+function touchHit(el){
+  var sheet=null,ov=null;
+  while(el&&el!==document.body){
+    if(!sheet&&el.classList&&el.classList.contains('sheet'))sheet=el;
+    if(!ov&&el.classList&&el.classList.contains('overlay')&&el.classList.contains('show'))ov=el;
+    el=el.parentNode;
+  }
+  return {sheet:sheet,ov:ov};
+}
+function onTouchStart(e){
+  var t=(e.touches&&e.touches[0])||(e.changedTouches&&e.changedTouches[0]);
+  if(!t)return;
+  var hit=touchHit(e.target);
+  touchTrack={x:t.clientX,y:t.clientY,sheet:hit.sheet,ov:hit.ov,scroll:hit.sheet?hit.sheet.scrollTop:0,vertical:null,done:false};
+}
+function onTouchMove(e){
+  if(!touchTrack||touchTrack.done)return;
+  var t=(e.touches&&e.touches[0])||(e.changedTouches&&e.changedTouches[0]);
+  if(!t)return;
+  var dx=t.clientX-touchTrack.x,dy=t.clientY-touchTrack.y;
+  if(touchTrack.sheet){
+    if(touchTrack.ov&&touchTrack.ov.id==='flashOverlay'){
+      if(Math.abs(dx)>SWIPE_DX){
+        touchTrack.done=true;
+        if(dx<0){if(!flashRevealed)flashReveal();else flashNext();}
+        else flashPrev();
+      }
+      return;
+    }
+    if(touchTrack.scroll<=0&&dy>SHEET_PULL){
+      touchTrack.done=true;
+      var fn=touchTrack.ov?OVERLAY_CLOSE[touchTrack.ov.id]:null;
+      if(fn)fn();else if(touchTrack.ov)touchTrack.ov.classList.remove('show');
+    }
+    return;
+  }
+  if(touchTrack.vertical===null)touchTrack.vertical=Math.abs(dy)>Math.abs(dx);
+  if(touchTrack.vertical)return;
+  if(!touchTrack.ov&&Math.abs(dx)>SWIPE_DX){
+    touchTrack.done=true;
+    var cur=document.querySelector('.view.active');
+    var name=cur?cur.id.replace('view-',''):'home';
+    var idx=VIEW_ORDER.indexOf(name);
+    if(idx<0)idx=0;
+    idx+=dx<0?1:-1;
+    if(idx>=0&&idx<VIEW_ORDER.length)switchView(VIEW_ORDER[idx]);
+  }
+}
+function onTouchEnd(){touchTrack=null;}
+document.addEventListener('touchstart',onTouchStart,{passive:true});
+document.addEventListener('touchmove',onTouchMove,{passive:true});
+document.addEventListener('touchend',onTouchEnd,{passive:true});
+document.addEventListener('touchcancel',onTouchEnd,{passive:true});
 </script>
 </body>
 </html>
