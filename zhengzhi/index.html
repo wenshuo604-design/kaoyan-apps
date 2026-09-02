@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>考研政治 · 刷题与速记</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+         background:linear-gradient(160deg,#e53935,#b71c1c); min-height:100vh; padding:20px 14px 40px; }
+  header { text-align:center; color:#fff; margin-bottom:18px; }
+  header .logo { font-size:40px; }
+  header h1 { font-size:21px; margin:6px 0 4px; letter-spacing:2px; }
+  header .sub { font-size:12px; opacity:.85; }
+  .wrap { max-width:680px; margin:0 auto; }
+  .tabs { display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px; }
+  .tab { flex-shrink:0; padding:9px 18px; border-radius:20px; border:1px solid rgba(255,255,255,.35);
+         background:rgba(255,255,255,.12); color:#fff; font-size:14px; font-weight:600; cursor:pointer; }
+  .tab.on { background:#fff; color:#b71c1c; border-color:#fff; }
+  .panel { display:none; }
+  .panel.on { display:block; }
+  .card { background:rgba(255,255,255,.14); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.25);
+          border-radius:16px; padding:18px 16px; color:#fff; margin-bottom:14px; }
+  .block-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .bchip { padding:7px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.35);
+           background:rgba(255,255,255,.1); color:#fff; font-size:13px; cursor:pointer; }
+  .bchip.on { background:#fff; color:#b71c1c; font-weight:600; }
+  .q-meta { display:flex; justify-content:space-between; font-size:12px; opacity:.85; margin-bottom:10px; }
+  .q-title { font-size:16px; line-height:1.65; font-weight:600; margin-bottom:14px; }
+  .opt { display:block; width:100%; text-align:left; padding:12px 14px; margin-bottom:9px; border-radius:12px;
+         border:1px solid rgba(255,255,255,.35); background:rgba(255,255,255,.1); color:#fff;
+         font-size:14px; line-height:1.5; cursor:pointer; }
+  .opt:active { transform:scale(.98); }
+  .opt.right { background:rgba(46,204,113,.45); border-color:#2ecc71; }
+  .opt.wrong { background:rgba(231,76,60,.45); border-color:#e74c3c; }
+  .opt.lock { pointer-events:none; }
+  .analysis { display:none; background:rgba(0,0,0,.22); border-radius:12px; padding:12px 14px;
+              font-size:13px; line-height:1.7; margin-top:4px; }
+  .analysis.show { display:block; }
+  .analysis b { color:#ffe082; }
+  .btn-row { display:flex; gap:10px; margin-top:14px; }
+  .btn { flex:1; padding:12px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; background:#fff; color:#b71c1c; }
+  .btn.ghost { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.4); }
+  .stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .stat-item { background:rgba(0,0,0,.18); border-radius:12px; padding:12px; text-align:center; }
+  .stat-item .num { font-size:22px; font-weight:700; }
+  .stat-item .lbl { font-size:11px; opacity:.8; margin-top:2px; }
+  .memo h3 { font-size:16px; margin-bottom:8px; color:#ffe082; }
+  .memo details { background:rgba(0,0,0,.18); border-radius:12px; padding:12px 14px; margin-bottom:10px; }
+  .memo summary { font-size:14px; font-weight:600; cursor:pointer; line-height:1.6; }
+  .memo .body { font-size:13px; line-height:1.8; margin-top:10px; opacity:.95; }
+  .memo .body b { color:#ffe082; }
+  .memo .body p { margin-bottom:8px; }
+  .qr-box { text-align:center; padding:8px 0; }
+  .qr-box .qr-slot { width:180px; height:180px; margin:12px auto; border:2px dashed rgba(255,255,255,.5);
+                     border-radius:14px; display:flex; align-items:center; justify-content:center;
+                     font-size:13px; opacity:.8; background:rgba(0,0,0,.15); }
+  .qr-box img { width:180px; height:180px; border-radius:14px; background:#fff; padding:6px; }
+  .qr-box p { font-size:12px; opacity:.85; line-height:1.8; }
+  .empty { text-align:center; padding:30px 0; font-size:14px; opacity:.8; }
+  .wrong-item { background:rgba(0,0,0,.18); border-radius:12px; padding:12px 14px; margin-bottom:10px; font-size:13px; line-height:1.6; }
+  .wrong-item .t { font-weight:600; margin-bottom:4px; }
+  .wrong-item .a { color:#a5ffb0; }
+  footer { text-align:center; margin-top:20px; font-size:11px; color:rgba(255,255,255,.6); }
+</style>
+</head>
+<body>
+<header><div class="logo">🚩</div><h1>考研政治 · 刷题与速记</h1><div class="sub">马原 · 毛中特 · 史纲 · 思修 · 时政</div></header>
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab on" data-panel="p-quiz">✏️ 刷题</div>
+    <div class="tab" data-panel="p-memo">📖 考点速记</div>
+    <div class="tab" data-panel="p-wrong">❌ 错题重做</div>
+    <div class="tab" data-panel="p-mp">📱 小程序刷题</div>
+  </div>
+
+  <!-- 刷题 -->
+  <section class="panel on" id="p-quiz">
+    <div class="block-row" id="blockRow"></div>
+    <div class="card" id="quizCard">
+      <div class="q-meta"><span id="qIdx"></span><span id="qBlock"></span></div>
+      <div class="q-title" id="qTitle"></div>
+      <div id="qOpts"></div>
+      <div class="analysis" id="qAnalysis"></div>
+      <div class="btn-row">
+        <button class="btn ghost" onclick="skipQ()">跳过</button>
+        <button class="btn" onclick="nextQ()">下一题</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="stat-grid" id="statGrid"></div>
+    </div>
+  </section>
+
+  <!-- 速记 -->
+  <section class="panel memo" id="p-memo">
+    <div id="memoBody"></div>
+  </section>
+
+  <!-- 错题 -->
+  <section class="panel" id="p-wrong">
+    <div class="card"><div id="wrongList"></div></div>
+  </section>
+
+  <!-- 小程序 -->
+  <section class="panel" id="p-mp">
+    <div class="card qr-box">
+      <h3 style="margin-bottom:6px;">📱 微信小程序刷题</h3>
+      <p>配套的微信刷题小程序无法在网页内直接打开。<br>请用微信「扫一扫」扫描下方小程序码进入。</p>
+      <div class="qr-slot" id="qrSlot">小程序码待更新</div>
+      <p style="opacity:.7;">（管理员：把小程序码图片命名为 qrcode.png 放在本目录即可自动显示）</p>
+    </div>
+  </section>
+
+  <footer>数据保存在本机浏览器 localStorage · 与考研应用集同源</footer>
+</div>
+
+<script>
+var BLOCKS = [
+  {id:'my',  name:'马原',   full:'马克思主义基本原理'},
+  {id:'mzt', name:'毛中特', full:'毛泽东思想和中国特色社会主义理论体系'},
+  {id:'sg',  name:'史纲',   full:'中国近现代史纲要'},
+  {id:'sx',  name:'思修',   full:'思想道德与法治'},
+  {id:'sz',  name:'时政',   full:'形势与政策以及当代世界经济与政治'}
+];
+
+var QS = [
+// ============ 马原 ============
+{b:'my', t:'马克思主义哲学认为，世界的本原是', o:['物质','精神','实践','运动'], a:0, e:'物质是标志客观实在的哲学范畴，世界的真正统一性在于它的物质性。物质决定意识。'},
+{b:'my', t:'意识是', o:['人脑的分泌物','客观存在的主观映象','思维的自由创造','一种特殊的物质'], a:1, e:'意识是物质世界长期发展的产物，是人脑的机能和属性，是客观世界的主观映象。意识在内容上是客观的，形式上是主观的。'},
+{b:'my', t:'唯物辩证法认为，发展的实质是', o:['事物数量的增减','新事物的产生和旧事物的灭亡','事物位置的移动','事物的循环往复'], a:1, e:'发展是前进的、上升的运动，发展的实质是新事物的产生和旧事物的灭亡。'},
+{b:'my', t:'矛盾的两种基本属性是', o:['普遍性和特殊性','同一性和斗争性','必然性和偶然性','绝对性和相对性'], a:1, e:'同一性和斗争性是矛盾的两种基本属性。矛盾是事物发展的根本动力。'},
+{b:'my', t:'"具体问题具体分析"的哲学依据是', o:['矛盾的普遍性','矛盾的特殊性','矛盾的同一性','质变与量变'], a:1, e:'矛盾特殊性原理要求具体问题具体分析，这是马克思主义活的灵魂。'},
+{b:'my', t:'实践是检验真理的唯一标准，这是因为', o:['实践具有直接现实性','实践具有普遍性','实践是认识的来源','真理是绝对性与相对性的统一'], a:0, e:'实践具有直接现实性的品格，能把主观认识与客观实际联系起来加以对照。'},
+{b:'my', t:'量变和质变的辩证关系揭示了', o:['事物发展的源泉和动力','事物发展的形式和状态','事物发展的方向和道路','事物发展的前提和结果'], a:1, e:'量变质变揭示的是事物发展的形式和状态；矛盾（对立统一）揭示源泉和动力；否定之否定揭示方向和道路。'},
+{b:'my', t:'社会存在决定社会意识，社会意识对社会存在具有', o:['决定作用','反作用','无条件决定作用','直接的同一关系'], a:1, e:'社会意识具有相对独立性，对社会存在有能动的反作用，先进的社会意识推动社会发展。'},
+{b:'my', t:'生产力中最活跃的因素是', o:['劳动对象','劳动资料','劳动者','生产关系'], a:2, e:'劳动者是生产力中最活跃的因素。劳动资料（生产工具）是衡量生产力水平的客观尺度。'},
+{b:'my', t:'商品的价值量由生产商品的', o:['个别劳动时间决定','社会必要劳动时间决定','剩余劳动时间决定','全部劳动时间决定'], a:1, e:'商品的价值量由生产商品的社会必要劳动时间决定，与劳动生产率成反比。'},
+{b:'my', t:'货币的基本职能是', o:['价值尺度和流通手段','支付手段和贮藏手段','世界货币和价值尺度','流通手段和支付手段'], a:0, e:'价值尺度和流通手段是货币的两个基本职能，其余为派生职能。'},
+{b:'my', t:'相对剩余价值的获得靠', o:['延长工作日','提高劳动强度','全社会劳动生产率提高使生活资料便宜','压低工资'], a:2, e:'相对剩余价值是在工作日长度不变时，通过缩短必要劳动时间、相对延长剩余劳动时间获得的，前提是全社会劳动生产率提高。'},
+// ============ 毛中特 ============
+{b:'mzt', t:'毛泽东思想活的灵魂是', o:['实事求是、群众路线、独立自主','武装斗争、统一战线、党的建设','实事求是、解放思想、与时俱进','理论联系实际、密切联系群众、批评与自我批评'], a:0, e:'实事求是、群众路线、独立自主是毛泽东思想活的灵魂；武装斗争、统一战线、党的建设是"三大法宝"。'},
+{b:'mzt', t:'新民主主义革命的三大法宝是', o:['实事求是、群众路线、独立自主','统一战线、武装斗争、党的建设','土地革命、武装斗争、根据地建设','理论建设、政治建设、组织建设'], a:1, e:'统一战线、武装斗争、党的建设是中国革命胜利的三大法宝。'},
+{b:'mzt', t:'中国革命的道路是', o:['城市包围农村','农村包围城市、武装夺取政权','议会斗争道路','和平赎买道路'], a:1, e:'农村包围城市、武装夺取政权是中国革命的正确道路，这是由中国半殖民地半封建社会的国情决定的。'},
+{b:'mzt', t:'社会主义初级阶段的主要矛盾（十九大重新表述）是', o:['人民日益增长的物质文化需要同落后的社会生产之间的矛盾','人民日益增长的美好生活需要和不平衡不充分的发展之间的矛盾','生产力与生产关系之间的矛盾','经济增长与环境保护之间的矛盾'], a:1, e:'十九大提出：我国社会主要矛盾已经转化为人民日益增长的美好生活需要和不平衡不充分的发展之间的矛盾。'},
+{b:'mzt', t:'"一国两制"的构想最初是为解决', o:['香港问题提出的','澳门问题提出的','台湾问题提出的','港澳问题同时提出的'], a:2, e:'"一国两制"最初是针对台湾问题提出的，先运用于解决香港、澳门问题。'},
+{b:'mzt', t:'我国改革开放的标志是', o:['1978年十一届三中全会','1982年十二大','1992年南方谈话','2001年加入WTO'], a:0, e:'1978年党的十一届三中全会作出把工作重心转移到经济建设上来、实行改革开放的历史性决策。'},
+{b:'mzt', t:'中国特色社会主义最本质的特征是', o:['人民当家作主','中国共产党领导','依法治国','共同富裕'], a:1, e:'中国特色社会主义最本质的特征是中国共产党领导，中国特色社会主义制度的最大优势也是中国共产党领导。'},
+{b:'mzt', t:'全面深化改革的总目标是', o:['建成小康社会','完善和发展中国特色社会主义制度、推进国家治理体系和治理能力现代化','实现共同富裕','建设社会主义现代化强国'], a:1, e:'全面深化改革总目标：完善和发展中国特色社会主义制度、推进国家治理体系和治理能力现代化。'},
+{b:'mzt', t:'新发展理念的内容是', o:['创新、协调、绿色、开放、共享','高速、高效、公平、可持续、安全','改革、发展、稳定、创新、开放','富强、民主、文明、和谐、美丽'], a:0, e:'新发展理念：创新（第一动力）、协调（内在要求）、绿色（必要条件）、开放（必由之路）、共享（根本目的）。'},
+{b:'mzt', t:'我国的根本政治制度是', o:['人民代表大会制度','中国共产党领导的多党合作和政治协商制度','民族区域自治制度','基层群众自治制度'], a:0, e:'人民代表大会制度是根本政治制度；后三项为基本政治制度。'},
+// ============ 史纲 ============
+{b:'sg', t:'中国近代史上第一个不平等条约是', o:['《北京条约》','《南京条约》','《马关条约》','《辛丑条约》'], a:1, e:'1842年《南京条约》：割香港岛、五口通商、协定关税，是中国近代史上第一个不平等条约。'},
+{b:'sg', t:'近代中国第一个比较系统的发展资本主义的方案是', o:['《资政新篇》','《天朝田亩制度》','《海国图志》','《民报》发刊词'], a:0, e:'《资政新篇》是太平天国后期提出的近代中国第一个比较系统的发展资本主义方案。'},
+{b:'sg', t:'新文化运动兴起的标志是', o:['《新青年》创刊','五四运动','中国共产党成立','护法运动'], a:0, e:'1915年陈独秀在上海创办《青年杂志》（后改名《新青年》），标志着新文化运动的兴起。'},
+{b:'sg', t:'五四运动的性质是', o:['资产阶级民主革命','彻底反帝反封建的爱国革命运动','无产阶级社会主义革命','农民阶级的反封建运动'], a:1, e:'五四运动是一场以先进青年知识分子为先锋、广大人民群众参加的彻底反帝反封建的伟大爱国革命运动，是新民主主义革命的开端。'},
+{b:'sg', t:'中国共产党第一次全国代表大会召开于', o:['1919年北京','1921年上海','1927年南昌','1935年遵义'], a:1, e:'1921年7月中共一大在上海召开（后转移至嘉兴南湖），宣告中国共产党成立。'},
+{b:'sg', t:'遵义会议的历史意义在于', o:['确定了土地革命路线','事实上确立了毛泽东在党中央的领导地位，是党的历史上生死攸关的转折点','标志着抗日民族统一战线正式形成','确立了党的政治路线'], a:1, e:'1935年遵义会议集中解决军事问题和组织问题，事实上确立了毛泽东在党中央和红军的领导地位，挽救了党、红军和中国革命。'},
+{b:'sg', t:'抗日民族统一战线正式形成的标志是', o:['西安事变和平解决','国民党发表中共中央提交的国共合作宣言','百团大战','重庆谈判'], a:1, e:'1937年9月国民党中央通讯社发表《中共中央为公布国共合作宣言》，蒋介石发表实际承认共产党合法地位的谈话，标志着抗日民族统一战线正式形成。'},
+{b:'sg', t:'中国革命胜利的基本经验（三大法宝）不包括', o:['统一战线','武装斗争','党的建设','土地革命'], a:3, e:'三大法宝是统一战线、武装斗争、党的建设。土地革命是特定时期的革命内容，不属于三大法宝。'},
+{b:'sg', t:'新中国成立标志着中国进入了', o:['社会主义社会','新民主主义社会','社会主义初级阶段','共产主义社会'], a:1, e:'1949年新中国成立，中国进入新民主主义社会（过渡性质的社会）；1956年三大改造完成后才进入社会主义社会（初级阶段）。'},
+{b:'sg', t:'中国进入社会主义社会的标志是', o:['新中国成立','三大改造基本完成','一五计划完成','五四宪法颁布'], a:1, e:'1956年生产资料私有制的社会主义改造（三大改造）基本完成，标志着社会主义基本制度在中国确立。'},
+// ============ 思修 ============
+{b:'sx', t:'社会主义核心价值观中，国家层面的价值要求是', o:['富强、民主、文明、和谐','自由、平等、公正、法治','爱国、敬业、诚信、友善','创新、协调、绿色、开放'], a:0, e:'国家层面：富强、民主、文明、和谐；社会层面：自由、平等、公正、法治；个人层面：爱国、敬业、诚信、友善。'},
+{b:'sx', t:'人生的自我价值与社会价值的关系是', o:['相互对立的','辩证统一的，社会价值是人生价值的最基本内容','自我价值高于社会价值','二者没有关系'], a:1, e:'人生价值包含自我价值与社会价值，二者辩证统一；人生的社会价值是实现人生自我价值的基础，评价人生价值的根本尺度是贡献。'},
+{b:'sx', t:'理想信念的作用是', o:['提供精神支柱和前进动力','决定物质生活条件','取代实践的作用','保证一帆风顺'], a:0, e:'理想信念是精神之"钙"，昭示奋斗目标、催生前进动力、提供精神支柱、提高精神境界。'},
+{b:'sx', t:'中华民族精神的核心是', o:['团结统一','爱好和平','爱国主义','自强不息'], a:2, e:'爱国主义是中华民族精神的核心。中华民族精神包括伟大创造、伟大奋斗、伟大团结、伟大梦想精神等。'},
+{b:'sx', t:'道德的根本任务是', o:['约束人的行为','维护统治秩序','培养有理想有道德的时代新人，促进人的全面发展','获取经济利益'], a:2, e:'社会主义道德建设的根本任务是培养担当民族复兴大任的时代新人，坚持以人民为核心。'},
+{b:'sx', t:'我国宪法的地位是', o:['根本大法、治国安邦的总章程','普通法律','行政法规','部门规章'], a:0, e:'宪法是国家的根本大法，具有最高的法律地位、法律权威、法律效力，是治国安邦的总章程。'},
+{b:'sx', t:'依法治国的首要任务是', o:['严格执法','依宪治国、依宪执政','公正司法','全民守法'], a:1, e:'坚持依法治国首先要坚持依宪治国，坚持依法执政首先要坚持依宪执政。'},
+{b:'sx', t:'个人品德养成的主要途径不包括', o:['学思并重','省察克治','知行合一','等待天赋'], a:3, e:'个人品德养成途径：学思并重、省察克治、慎独自律、知行合一、积善成德。'},
+{b:'sx', t:'社会主义道德的核心和原则分别是', o:['为人民服务、集体主义','为人民服务、爱国主义','集体主义、公平正义','爱国主义、为人民服务'], a:0, e:'社会主义道德的核心是为人民服务，原则是集体主义。这是与以往一切道德类型的根本区别。'},
+// ============ 时政（方法论与常考框架）============
+{b:'sz', t:'时政选择题的主要考查方式是', o:['只考当年国内大事','结合各科原理分析当年重大时事','只考国际新闻','只考领导人讲话原文'], a:1, e:'时政题多以当年重大时事为素材，结合马原、毛中特等原理出题；同时考查重要会议、重大成就、重要纪念日。'},
+{b:'sz', t:'复习时政的最佳策略是', o:['年初就开始背诵全年新闻','冲刺阶段集中复习当年重大事件与重要会议','只刷旧题','完全放弃'], a:1, e:'时政时效性强，宜在冲刺阶段（考前2-3个月）集中复习当年1月以来的重大时政，配合模拟题巩固。'},
+{b:'sz', t:'当代世界经济与政治部分（选做题）的核心考点是', o:['中国外交理念（人类命运共同体、全球治理等）','各国军事实力对比','国际贸易数据','历史事件编年'], a:0, e:'当代世经政选做题核心围绕中国主张：人类命运共同体、共建"一带一路"、全球发展/安全/文明倡议、真正的多边主义等。'},
+{b:'sz', t:'分析题作答时政材料的基本方法是', o:['抄材料即可','原理+材料+意义（结合中国主张）','只写原理','只喊口号'], a:1, e:'时政分析题采用"点明原理—结合材料—阐述意义（对接中国主张/青年担当）"三段式作答。'},
+{b:'sz', t:'与时政相关的固定得分点通常包括', o:['重要会议主题、重大纪念日、新提法新论断','娱乐新闻','体育赛事比分','影视剧剧情'], a:0, e:'党代会/中央全会主题、重大科技成就、重要周年纪念日、外交新提法是每年必考的固定得分点。'},
+{b:'sz', t:'做时政选择题遇到陌生提法时，正确做法是', o:['凭感觉随便选','抓关键词对应已知原理（如"共同体""高质量""自主"）','全部选最长的选项','放弃作答'], a:1, e:'时政选项常设置干扰项，陌生提法优先抓关键词回扣原理和中国主张；"最长的选项"不可靠，谨防偷换概念。'}
+];
+
+var MEMO = {
+my:[
+ ['唯物论：物质与意识','<p><b>物质</b>是标志客观实在的哲学范畴；世界的真正统一性在于物质性。</p><p><b>意识</b>是客观存在的主观映象：内容客观、形式主观。物质决定意识，意识具有能动反作用。</p><p>方法论：一切从实际出发，实事求是。</p>'],
+ ['辩证法两大总特征','<p><b>联系</b>：客观性、普遍性、多样性、条件性。</p><p><b>发展</b>：实质是新事物产生、旧事物灭亡。过程性。</p>'],
+ ['三大规律','<p><b>对立统一</b>（源泉动力）：同一性、斗争性；普遍性寓于特殊性。</p><p><b>量变质变</b>（形式状态）：度是保持事物质的稳定性的数量界限；适度原则。</p><p><b>否定之否定</b>（方向道路）：辩证否定是自我否定、扬弃；前进性与曲折性统一。</p>'],
+ ['认识论','<p><b>实践</b>是认识的来源、动力、目的、检验标准；实践具有直接现实性。</p><p><b>真理</b>的绝对性与相对性统一；实践是检验真理的唯一标准。</p><p>认识运动总规律：实践→认识→再实践→再认识，循环上升。</p>'],
+ ['唯物史观','<p><b>社会存在</b>决定社会意识，社会意识相对独立并可反作用于社会存在。</p><p><b>生产力</b>（劳动者最活跃；生产工具是水平尺度）与<b>生产关系</b>；经济基础与上层建筑。</p><p>人民群众是历史的创造者：物质财富、精神财富的创造者，社会变革的决定力量。</p>'],
+ ['政治经济学核心公式','<p>商品二因素：价值（凝结的无差别人类劳动）与使用价值。</p><p>劳动二重性：具体劳动→使用价值；抽象劳动→价值。</p><p><b>价值量由社会必要劳动时间决定</b>，与劳动生产率成反比。</p><p>剩余价值：绝对剩余价值（延长工作日）／相对剩余价值（提高全社会生产率）／超额剩余价值（个别企业率先提高生产率）。</p>']
+],
+mzt:[
+ ['毛泽东思想活的灵魂','<p><b>实事求是</b>（精髓）、<b>群众路线</b>（一切为了群众、一切依靠群众；从群众中来到群众中去）、<b>独立自主</b>。</p>'],
+ ['新民主主义革命总路线','<p>无产阶级领导的，人民大众的，反对帝国主义、封建主义、官僚资本主义的革命。</p><p>三大法宝：<b>统一战线、武装斗争、党的建设</b>。革命道路：农村包围城市、武装夺取政权。</p>'],
+ ['社会主义改造理论','<p>农业：互助组→初级社→高级社。</p><p>资本主义工商业：和平赎买（国家资本主义形式，加工订货→公私合营→全行业合营；四马分肥）。</p>'],
+ ['邓小平理论与改革开放','<p>社会主义本质：解放和发展生产力，消灭剥削、消除两极分化，最终达到共同富裕。</p><p>社会主义初级阶段基本路线：一个中心、两个基本点。</p>'],
+ ['新时代思想核心考点','<p>主要矛盾转化：美好生活需要 vs 不平衡不充分发展。</p><p>最本质特征/最大优势：<b>党的领导</b>。</p><p>"两个一百年"→2035基本实现现代化→本世纪中叶建成社会主义现代化强国。</p><p>新发展理念：<b>创新、协调、绿色、开放、共享</b>；新发展格局：以国内大循环为主体、国内国际双循环相互促进。</p>']
+],
+sg:[
+ ['侵略与不平等条约','<p>1840鸦片战争→《南京条约》（第一个）；1894甲午→《马关条约》（允许设厂）；1900八国联军→《辛丑条约》（赔款最多、标志完全沦为半殖民地半封建）。</p>'],
+ ['各阶级救亡探索','<p>太平天国（农民阶级，最大意义是打击了统治秩序）；洋务运动（地主阶级，中体西用）；戊戌变法（资产阶级改良）；辛亥革命（资产阶级革命，推翻帝制但未改变社会性质）。</p>'],
+ ['五四与建党','<p>1915新文化运动（《新青年》）→1919五四（新民主主义革命开端）→1921建党（开天辟地大事变）。</p>'],
+ ['革命关键节点','<p>1927南昌起义（打响武装反抗第一枪）；遵义会议（生死攸关转折点，1935）；1937抗日民族统一战线正式形成；1949七届二中全会（两个务必）、新中国成立。</p>'],
+ ['新中国成立与过渡','<p>1949进入新民主主义社会；1953提出过渡时期总路线（一化三改）；1956三大改造完成→确立社会主义基本制度，进入社会主义初级阶段。</p>']
+],
+sx:[
+ ['价值观与人生观','<p>人生观的核心是人生目的。人生价值=自我价值+社会价值，<b>社会价值是最基本内容</b>，根本评价尺度是对社会的责任和贡献。</p><p>理想信念是精神之钙；个人理想与社会理想的统一。</p>'],
+ ['道德观','<p>中华传统美德基本精神；中国革命道德。社会主义道德核心：<b>为人民服务</b>；原则：<b>集体主义</b>。</p><p>社会公德、职业道德（爱岗敬业诚实守信办事公道热情服务奉献社会）、家庭美德、个人品德。</p>'],
+ ['法治观','<p>宪法是根本大法；依法治国首先是<b>依宪治国</b>。</p><p>法治道路核心：坚持党的领导、人民当家作主、依法治国有机统一。</p><p>权利与义务相统一；依法行使权利、履行义务。</p>'],
+ ['常考名言对应','<p>"国而忘家、公而忘私"→爱国主义；"干磨万击还坚劲"→砥砺奋斗；"不学礼，无以立"→明德修身。</p>']
+],
+sz:[
+ ['时政复习清单（冲刺期用）','<p>① 当年重要会议（中央全会、经济工作会议等）主题与公报新提法。</p><p>② 重大科技成就、重大工程、重要纪念活动。</p><p>③ 中国外交主张：人类命运共同体、三大全球倡议（发展/安全/文明）、"一带一路"。</p><p>④ 重要周年（整数周年事件易考史纲结合题）。</p>'],
+ ['分析题三段式模板','<p><b>第一段</b>点明原理/论断；<b>第二段</b>结合材料分析（引用材料关键词）；<b>第三段</b>阐述意义+落脚到中国主张或青年担当。</p><p>书写工整、分点作答、原理关键词前置。</p>']
+]
+};
+
+// ===== localStorage =====
+var LS_KEY = 'kaoyan_zhengzhi_v1';
+var store = { done:{}, wrong:{} };   // done: qid->1; wrong: qid->wrongCount
+try { var s = localStorage.getItem(LS_KEY); if (s) store = JSON.parse(s); } catch(e) {}
+function save() { try { localStorage.setItem(LS_KEY, JSON.stringify(store)); } catch(e) {} }
+
+var curBlock = 'all';
+var order = [], cur = 0;
+
+function qid(q, i) { return q.b + '_' + i; }
+function pool() {
+  var list = [];
+  QS.forEach(function(q, i) { if (curBlock === 'all' || q.b === curBlock) list.push({q:q, i:i}); });
+  return list;
+}
+function buildOrder() {
+  var p = pool();
+  // 优先没做过的，其次做错的
+  var fresh = [], done = [];
+  p.forEach(function(item) {
+    var id = qid(item.q, item.i);
+    if (!store.done[id]) fresh.push(item); else done.push(item);
+  });
+  order = fresh.concat(done);
+  cur = 0;
+}
+
+function renderBlockRow() {
+  var html = '<div class="bchip' + (curBlock==='all'?' on':'') + '" onclick="setBlock(\'all\')">全部</div>';
+  BLOCKS.forEach(function(b) {
+    html += '<div class="bchip' + (curBlock===b.id?' on':'') + '" onclick="setBlock(\'' + b.id + '\')">' + b.name + '</div>';
+  });
+  document.getElementById('blockRow').innerHTML = html;
+}
+function setBlock(id) { curBlock = id; renderBlockRow(); buildOrder(); showQ(); }
+
+function blockName(id) { for (var i=0;i<BLOCKS.length;i++) if (BLOCKS[i].id===id) return BLOCKS[i].name; return id; }
+
+function showQ() {
+  if (!order.length) {
+    document.getElementById('qTitle').innerHTML = '本板块题目已刷完 🎉<br><span style="font-size:12px;opacity:.8">点「下一题」从头再来</span>';
+    document.getElementById('qOpts').innerHTML = '';
+    document.getElementById('qAnalysis').className = 'analysis';
+    document.getElementById('qIdx').textContent = '';
+    document.getElementById('qBlock').textContent = '';
+    return;
+  }
+  var item = order[cur % order.length];
+  var q = item.q, id = qid(q, item.i);
+  document.getElementById('qIdx').textContent = '第 ' + (cur % order.length + 1) + ' / ' + order.length + ' 题';
+  document.getElementById('qBlock').textContent = blockName(q.b);
+  document.getElementById('qTitle').textContent = q.t;
+  var opts = '';
+  q.o.forEach(function(o, oi) {
+    opts += '<button class="opt" data-oi="' + oi + '" onclick="pick(' + oi + ')">' + String.fromCharCode(65+oi) + '. ' + o + '</button>';
+  });
+  document.getElementById('qOpts').innerHTML = opts;
+  document.getElementById('qAnalysis').className = 'analysis';
+  document.getElementById('qAnalysis').innerHTML = '<b>解析：</b>' + q.e;
+}
+function pick(oi) {
+  var item = order[cur % order.length];
+  var q = item.q, id = qid(q, item.i);
+  var btns = document.querySelectorAll('#qOpts .opt');
+  btns.forEach(function(b) { b.classList.add('lock'); });
+  btns[q.a].classList.add('right');
+  if (oi !== q.a) {
+    btns[oi].classList.add('wrong');
+    store.wrong[id] = (store.wrong[id] || 0) + 1;
+  } else {
+    delete store.wrong[id];
+  }
+  store.done[id] = 1;
+  save();
+  document.getElementById('qAnalysis').className = 'analysis show';
+  renderStats();
+}
+function nextQ() { if (order.length) { cur++; showQ(); } else { buildOrder(); showQ(); } }
+function skipQ() { nextQ(); }
+
+function renderStats() {
+  var total = QS.length, done = 0, correctIds = 0;
+  QS.forEach(function(q, i) {
+    var id = qid(q, i);
+    if (store.done[id]) done++;
+    if (store.done[id] && !store.wrong[id]) correctIds++;
+  });
+  var rate = done ? Math.round(correctIds / done * 100) : 0;
+  var html = '<div class="stat-item"><div class="num">' + done + '/' + total + '</div><div class="lbl">已刷题数</div></div>' +
+             '<div class="stat-item"><div class="num">' + rate + '%</div><div class="lbl">正确率</div></div>' +
+             '<div class="stat-item"><div class="num">' + Object.keys(store.wrong).length + '</div><div class="lbl">待消灭错题</div></div>' +
+             '<div class="stat-item"><div class="num">' + (total - done) + '</div><div class="lbl">剩余新题</div></div>';
+  document.getElementById('statGrid').innerHTML = html;
+}
+
+function renderMemo() {
+  var html = '';
+  BLOCKS.forEach(function(b) {
+    html += '<div class="card"><h3>' + b.name + ' · ' + b.full + '</h3>';
+    MEMO[b.id].forEach(function(m) {
+      html += '<details><summary>' + m[0] + '</summary><div class="body">' + m[1] + '</div></details>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('memoBody').innerHTML = html;
+}
+
+function renderWrong() {
+  var ids = Object.keys(store.wrong);
+  if (!ids.length) { document.getElementById('wrongList').innerHTML = '<div class="empty">暂无错题，继续保持 💪</div>'; return; }
+  var html = '';
+  ids.forEach(function(id) {
+    var parts = id.split('_'); var bi = parts[0], qi = parseInt(parts[1]);
+    QS.forEach(function(q, i) { if (i === qi && q.b === bi) {
+      html += '<div class="wrong-item"><div class="t">【' + blockName(q.b) + '】' + q.t + '</div>' +
+              '<div>正确答案：<span class="a">' + String.fromCharCode(65+q.a) + '. ' + q.o[q.a] + '</span></div>' +
+              '<div style="opacity:.85;margin-top:4px;">' + q.e + '</div></div>';
+    }});
+  });
+  html += '<button class="btn" style="width:100%;" onclick="clearWrong()">全部清零（已掌握）</button>';
+  document.getElementById('wrongList').innerHTML = html;
+}
+function clearWrong() { if (confirm('确认所有错题都已掌握？')) { store.wrong = {}; save(); renderWrong(); renderStats(); } }
+
+// tabs
+document.querySelectorAll('.tab').forEach(function(t) {
+  t.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
+    t.classList.add('on');
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+    document.getElementById(t.dataset.panel).classList.add('on');
+    if (t.dataset.panel === 'p-wrong') renderWrong();
+  });
+});
+
+// 二维码若存在则替换占位
+(function(){
+  var img = new Image();
+  img.onload = function(){ var s = document.getElementById('qrSlot'); s.innerHTML=''; img.alt='小程序码'; s.appendChild(img); };
+  img.src = 'qrcode.png';
+})();
+
+renderBlockRow(); buildOrder(); showQ(); renderStats(); renderMemo();
+</script>
+</body>
+</html>
